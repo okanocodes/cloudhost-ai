@@ -2,7 +2,7 @@ import React from "react";
 import { Cpu, ArrowRight } from "lucide-react";
 import CategoryIcon from "./ui/CategoryIcon";
 import GhostButton from "./ui/GhostButton";
-
+//deneme
 export default function ServiceCard({ service, onSelect, highlighted }) {
     return (
         <div
