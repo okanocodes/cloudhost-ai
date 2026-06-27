@@ -48,7 +48,7 @@ export default function HomePage({ goTo, selectService }) {
                         </div>
                     </div>
 
-                    <AssistantWidget
+                    <AssistantWidget 
                         title="Hangi Paketi Seçmeliyim?"
                         intro="Projenizi anlatın, size uygun altyapıyı önereyim. Örn: “Hangi paketi almalıyım?”"
                         quickQuestions={["Hangi paketi almalıyım?", "React uygulamam için hangisi uygun?", "En ucuz seçenek nedir?"]}

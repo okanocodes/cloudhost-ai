@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { InferenceClient } from "@huggingface/inference";
+import React, { useState, useRef, useEffect } from "react";
+import { useAIChat } from "../hooks/useAIChat";
+import { findProduct } from "../lib/aiChatService";
 
 /* =============================================================================
    AiChatWidget.jsx
@@ -39,138 +40,7 @@ import { InferenceClient } from "@huggingface/inference";
    `streamReply()` at your own endpoint instead of calling HF directly.
    ============================================================================= */
 
-/* --------------------------- Knowledge base -------------------------------- */
-/* Keep this in sync with your actual catalog/policies (mirrors SERVICES in
-   CloudHostAI.jsx). This is what product cards are matched against. */
-const PRODUCTS = [
-    { id: "web-starter", title: "Web Hosting Starter", price: "$2/ay", specs: "1 Çekirdek (Paylaşımlı) · 1GB RAM · 20GB SSD" },
-    { id: "vps-basic", title: "VPS Basic", price: "$5/ay", specs: "2 Çekirdek · 4GB RAM · 80GB SSD" },
-    { id: "vps-pro", title: "VPS Pro", price: "$10/ay", specs: "4 Çekirdek · 8GB RAM · 160GB SSD" },
-    { id: "cloud-enterprise", title: "Cloud Enterprise", price: "$25/ay", specs: "8 Çekirdek · 16GB RAM · 320GB NVMe" },
-];
-
-const SYSTEM_PROMPT = `Sen CloudHost AI adlı bulut altyapı barındırma platformuna gömülü yapay zekâ destek asistanısın. Yalnızca aşağıdaki bilgileri kullanarak yanıt ver — asla teknik özellik, fiyat veya politika icat etme.
-
-ŞİRKET
-- Ad: CloudHost AI
-- Destek: 7/24 kesintisiz mühendislik destek katmanı; bir destek talebi açıldığında ortalama ilk yanıt süresi 15 dakikanın altındadır.
-- İade Politikası: Tüm paketlerde 14 günlük kesin para iade garantisi sunuyoruz; karmaşık bir doğrulama kriteri aranmaz. Dashboard > Servislerim üzerinden ilgili faturayı seçip "İade Talep Et" adımını izlemeniz yeterlidir.
-- Veri merkezleri: Frankfurt (DE), Amsterdam (NL), İstanbul (TR), New York (US).
-
-PAKET KATALOĞU (bu isimleri tam olarak kullan)
-1. Web Hosting Starter — $2/ay — 1 paylaşımlı CPU çekirdeği, 1GB RAM, 20GB SSD. Temel WordPress siteleri ve statik HTML portföyleri için ideal.
-2. VPS Basic — $5/ay — 2 CPU çekirdeği, 4GB RAM, 80GB SSD. Küçük kişisel projeler, landing page'ler ve hafif Node.js backend süreçleri için ideal.
-3. VPS Pro — $10/ay — 4 CPU çekirdeği, 8GB RAM, 160GB SSD. Orta ölçekli e-ticaret siteleri, Next.js dağıtımları ve veritabanı depolama aşamaları için uygun.
-4. Cloud Enterprise — $25/ay — 8 CPU çekirdeği, 16GB RAM, 320GB NVMe. Yüksek trafikli uygulamalar, kurumsal ölçeklenme ve ağır veritabanı yükleri için tasarlandı.
-
-SIKÇA SORULANLAR
-- Sunucu yeniden başlatma: "Servislerim" sayfasında ilgili satırdaki "Yeniden Başlat" düğmesine tıklamak yeterli — kısa bir yeniden başlatma durumu gösterir, ardından otomatik olarak aktif duruma döner.
-- Sunucu durdurma/başlatma: aynı satırdaki "Durdur" / "Başlat" düğmesiyle yapılır.
-- Doğru paketi seçme: kullanıcıya ne tür bir proje yayınlayacağını sor, ardından iş yüküne en yakın katalog girdisiyle eşleştir.
-
-YANIT VERME KURALLARI
-- Kısa, samimi ve bilgili ol. Genellikle birkaç kısa cümle yeterlidir.
-- Kullanıcının yazdığı dille yanıt ver (Türkçe yazarsa Türkçe, İngilizce yazarsa İngilizce).
-- Sadece CloudHost AI'nin ürünleri, politikaları ve destek konularıyla ilgili konuş. İlgisiz bir şey sorulursa, nazikçe barındırma/altyapı konusuna yönlendir.
-- Yalnızca ve sadece kataloğdaki belirli bir paketi gerçekten önerdiğinde, nedenini kendi cümlelerinle açıkladıktan sonra, önerdiğin her paket için ayrı bir satırda TAM OLARAK şu formatı ekle, o satırda başka hiçbir şey olmasın:
-
-ÜRÜN KARTI KURALI
-
-- Kullanıcıya yalnızca gerçekten belirli bir CloudHost AI paketi öneriyorsan bu kuralları uygula.
-- Önce öneri nedenini doğal bir şekilde açıkla.
-- Açıklama bittikten sonra yeni bir satıra yalnızca aşağıdaki ayırıcıyı yaz:
-
----
-
-- Sonraki satıra yalnızca geçerli bir JSON nesnesi yaz.
-
-Örnek:
-
-VPS Pro paketi orta ölçekli Next.js projeleri için daha uygundur. Daha yüksek CPU ve RAM kapasitesi sayesinde uygulaman daha rahat çalışacaktır.
-
----
-{"cards":[{"type":"product","id":"vps-pro"}]}
-
-Kurallar:
-
-- Eğer herhangi bir paket önermiyorsan ayırıcı veya JSON ekleme.
-- JSON hakkında hiçbir açıklama yapma.
-- JSON her zaman cevabın en sonunda yer almalıdır.
-- JSON yalnızca aşağıdaki ürün kimliklerini kullanabilir:
-
-web-starter
-vps-basic
-vps-pro
-cloud-enterprise
-
-Tam katalog adını kullan. Bu etiket formatından kullanıcıya asla bahsetme — otomatik olarak bir ürün kartına dönüştürülür.`;
-
-/* --------------------------- Streamed-tag parsing --------------------------- */
-// const PRODUCT_TAG_RE = /\[\[PRODUCT:\s*([^\]]+)\]\]/g;
-
-/** Splits raw streamed text into renderable segments, hiding an in-progress
- *  (not yet closed) tag at the very end so partial markup never flashes on screen. */
-// function parseAssistantContent(raw) {
-//     const lastOpen = raw.lastIndexOf("[[PRODUCT:");
-//     const safeRaw = lastOpen !== -1 && raw.indexOf("]]", lastOpen) === -1 ? raw.slice(0, lastOpen) : raw;
-
-//     const segments = [];
-//     let lastIndex = 0;
-//     let match;
-//     PRODUCT_TAG_RE.lastIndex = 0;
-//     while ((match = PRODUCT_TAG_RE.exec(safeRaw)) !== null) {
-//         if (match.index > lastIndex) segments.push({ type: "text", value: safeRaw.slice(lastIndex, match.index) });
-//         segments.push({ type: "product", title: match[1].trim() });
-//         lastIndex = match.index + match[0].length;
-//     }
-//     if (lastIndex < safeRaw.length) segments.push({ type: "text", value: safeRaw.slice(lastIndex) });
-//     return segments;
-// }
-
-// function findProduct(title) {
-//     const t = title.toLowerCase();
-//     return PRODUCTS.find((p) => p.title.toLowerCase() === t) || null;
-// }
-
-
-function parseAssistantResponse(response) {
-    const separator = "\n---\n";
-
-    // No metadata found
-    const index = response.lastIndexOf(separator);
-
-    if (index === -1) {
-        return {
-            message: response.trim(),
-            metadata: {},
-        };
-    }
-
-    const message = response.slice(0, index).trim();
-    const json = response.slice(index + separator.length).trim();
-
-    try {
-        const metadata = JSON.parse(json);
-
-        return {
-            message,
-            metadata,
-        };
-    } catch (err) {
-        console.warn("Failed to parse AI metadata:", err);
-
-        // If the AI generated invalid JSON,
-        // show only the human-readable message.
-        return {
-            message,
-            metadata: {},
-        };
-    }
-}
-
-function findProduct(id) {
-    return PRODUCTS.find(p => p.id === id);
-}
+// Knowledge base and utility helper functions have been moved to src/lib/aiChatService.js
 
 /* ------------------------------- UI bits ------------------------------------ */
 const WIDGET_STYLE = `
@@ -331,18 +201,15 @@ function MessageBubble({ message }) {
                         {message.content}
 
                         {message.metadata?.cards?.map((card) => {
-                            switch (card.type) {
-                                case "product":
-                                    return (
-                                        <ProductCard
-                                            key={card.id}
-                                            productId={card.id}
-                                        />
-                                    );
-
-                                default:
-                                    return null;
-                            }
+                            const possibleId = card.id || card.productId || card.type;
+                            const product = findProduct(possibleId);
+                            if (!product) return null;
+                            return (
+                                <ProductCard
+                                    key={product.id}
+                                    productId={product.id}
+                                />
+                            );
                         })}
                     </>
                 )}
@@ -354,20 +221,18 @@ function MessageBubble({ message }) {
 /* -------------------------------- Widget ------------------------------------ */
 export default function AiChatWidget() {
     const [open, setOpen] = useState(false);
-    const [messages, setMessages] = useState([
+    const {
+        messages,
+        setMessages,
+        input,
+        setInput,
+        busy,
+        streamReply
+    } = useAIChat([
         { role: "assistant", content: "Merhaba! Ben CloudHost AI asistanıyım. Paketlerimiz, fiyatlandırma ya da sunucularınızı nasıl yöneteceğiniz hakkında soru sorabilirsiniz." },
     ]);
-    const [input, setInput] = useState("");
-    const [busy, setBusy] = useState(false);
 
     const scrollRef = useRef(null);
-    const clientRef = useRef(null);
-    const cancelledRef = useRef(false);
-
-    if (!clientRef.current) {
-        const token = import.meta.env?.VITE_HF_TOKEN; // CRA: process.env.REACT_APP_HF_TOKEN
-        clientRef.current = new InferenceClient(token);
-    }
 
     useEffect(() => {
         if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -379,86 +244,6 @@ export default function AiChatWidget() {
         }
         window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
-    }, []);
-
-    useEffect(() => {
-        cancelledRef.current = false; // reset in case StrictMode double-invoked this
-        return () => { cancelledRef.current = true; };
-    }, []);
-
-    const streamReply = useCallback(async (history) => {
-        setBusy(true);
-        setMessages((prev) => [...prev, { role: "assistant", content: "", streaming: true }]);
-
-
-        try {
-            const stream = clientRef.current.chatCompletionStream({
-                model: "meta-llama/Llama-3.1-8B-Instruct", // swap for any HF-hosted chat model you have access to
-                provider: "auto",
-                messages: [{ role: "system", content: SYSTEM_PROMPT }, ...history],
-                max_tokens: 400,
-                temperature: 0.4,
-            });
-
-
-
-            let acc = "";
-            for await (const chunk of stream) {
-
-                if (cancelledRef.current) return;
-
-                const delta = chunk.choices?.[0]?.delta?.content;
-
-                if (delta) {
-
-                    acc += delta;
-
-                    const separator = "\n---\n";
-
-                    // Hide the metadata while streaming
-                    const visibleText = acc.includes(separator)
-                        ? acc.split(separator)[0]
-                        : acc;
-
-                    setMessages((prev) => {
-                        const next = [...prev];
-
-                        next[next.length - 1] = {
-                            role: "assistant",
-                            content: visibleText,
-                            streaming: true,
-                        };
-
-                        return next;
-                    });
-                }
-            }
-            setMessages((prev) => {
-                const next = [...prev];
-                const parsed = parseAssistantResponse(acc);
-
-                next[next.length - 1] = {
-                    role: "assistant",
-                    content: parsed.message,
-                    metadata: parsed.metadata,
-                    streaming: false
-                };
-                return next;
-            });
-        } catch (err) {
-            setMessages((prev) => {
-                const next = [...prev];
-                next[next.length - 1] = {
-                    role: "assistant",
-                    content: "Üzgünüm, şu anda yapay zekâ servisine erişemedim. Lütfen birazdan tekrar deneyin.",
-                    error: true,
-                };
-                return next;
-            });
-            console.error("HF chat stream failed:", err);
-        } finally {
-            if (!cancelledRef.current) setBusy(false);
-        }
     }, []);
 
     function handleSend() {
