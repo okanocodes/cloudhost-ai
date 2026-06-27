@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Server } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 
@@ -7,15 +7,15 @@ import ServiceFinderBar from "../components/ServiceFinderBar";
 import ServiceCard from "../components/ServiceCard";
 
 import {
+  fetchServicesData,
   setSelectedCategory,
   setHighlightedService,
-  setSelectedServiceId
+  setSelectedServiceId,
 } from "../store/servicesSlice";
 
 export default function ServicesPage({ selectService }) {
   const dispatch = useDispatch();
 
-  // Redux store içinden services state'ini alıyoruz
   const services = useSelector((state) => state.services.list);
   const categories = useSelector((state) => state.services.categories);
   const selectedCategory = useSelector(
@@ -24,12 +24,27 @@ export default function ServicesPage({ selectService }) {
   const highlightedServiceId = useSelector(
     (state) => state.services.highlightedServiceId
   );
+  const status = useSelector((state) => state.services.status);
+  const error = useSelector((state) => state.services.error);
 
-  // Seçilen kategoriye göre servisleri filtreliyoruz
+  useEffect(() => {
+    if (status === "idle") {
+      dispatch(fetchServicesData());
+    }
+  }, [status, dispatch]);
+
   const filtered = services.filter(
     (service) =>
       selectedCategory === "Tümü" || service.category === selectedCategory
   );
+
+  if (status === "loading") {
+    return <p className="px-6 py-12 text-muted">Hizmetler yükleniyor...</p>;
+  }
+
+  if (status === "failed") {
+    return <p className="px-6 py-12 text-danger">Hata: {error}</p>;
+  }
 
   return (
     <div className="px-6 py-12">
@@ -48,9 +63,7 @@ export default function ServicesPage({ selectService }) {
 
         <div className="mt-6">
           <ServiceFinderBar
-            onMatch={(service) =>
-              dispatch(setHighlightedService(service.id))
-            }
+            onMatch={(service) => dispatch(setHighlightedService(service.id))}
           />
         </div>
 
@@ -79,7 +92,7 @@ export default function ServicesPage({ selectService }) {
               onSelect={(id) => {
                 dispatch(setSelectedServiceId(id));
                 selectService(id);
-              }} 
+              }}
             />
           ))}
         </div>

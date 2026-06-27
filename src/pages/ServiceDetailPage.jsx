@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   ChevronRight,
   Cpu,
@@ -8,29 +8,43 @@ import {
   CheckCircle2,
   MapPin,
 } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 
 import CategoryIcon from "../components/ui/CategoryIcon";
 import AssistantWidget from "../components/AssistantWidget";
 import PrimaryButton from "../components/ui/PrimaryButton";
 
-import { COMPANY } from "../data/knowledgeBase";
 import { assessSuitability } from "../lib/aiEngine";
+import { fetchServicesData } from "../store/servicesSlice";
 
 export default function ServiceDetailPage({ goTo, onPurchase }) {
-  // Redux store içindeki tüm servisleri alıyoruz
-  const services = useSelector((state) => state.services.list);
+  const dispatch = useDispatch();
 
-  // Redux store içindeki seçili servis id'sini alıyoruz
+  const services = useSelector((state) => state.services.list);
+  const company = useSelector((state) => state.services.company);
   const selectedServiceId = useSelector(
     (state) => state.services.selectedServiceId
   );
+  const status = useSelector((state) => state.services.status);
+  const error = useSelector((state) => state.services.error);
 
-  // Seçili id'ye göre gerçek servis objesini buluyoruz
+  useEffect(() => {
+    if (status === "idle") {
+      dispatch(fetchServicesData());
+    }
+  }, [status, dispatch]);
+
   const service = services.find((s) => s.id === selectedServiceId);
 
-  // Eğer servis bulunamazsa hiçbir şey gösterme
-  if (!service) return null;
+  if (status === "loading") {
+    return <p className="px-6 py-12 text-muted">Detay yükleniyor...</p>;
+  }
+
+  if (status === "failed") {
+    return <p className="px-6 py-12 text-danger">Hata: {error}</p>;
+  }
+
+  if (!service || !company) return null;
 
   return (
     <div className="px-6 py-12">
@@ -85,7 +99,7 @@ export default function ServiceDetailPage({ goTo, onPurchase }) {
 
                 <div className="flex items-center gap-2 border-b border-token pb-3">
                   <ShieldCheck size={15} className="text-ai" />
-                  {COMPANY.refundDays} gün iade garantisi
+                  {company.refundDays} gün iade garantisi
                 </div>
               </div>
 
@@ -94,7 +108,7 @@ export default function ServiceDetailPage({ goTo, onPurchase }) {
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                {COMPANY.datacenters.map((d) => (
+                {company.datacenters.map((d) => (
                   <span
                     key={d.city}
                     className="inline-flex items-center gap-1 rounded-full border border-token-light px-2.5 py-1 text-xs text-muted"
@@ -139,12 +153,12 @@ export default function ServiceDetailPage({ goTo, onPurchase }) {
             <ul className="mt-5 space-y-2.5 text-sm text-muted">
               <li className="flex items-center gap-2">
                 <CheckCircle2 size={14} className="text-success" />
-                {COMPANY.support}
+                {company.support}
               </li>
 
               <li className="flex items-center gap-2">
                 <CheckCircle2 size={14} className="text-success" />
-                {COMPANY.refundDays} gün iade garantisi
+                {company.refundDays} gün iade garantisi
               </li>
 
               <li className="flex items-center gap-2">
