@@ -277,7 +277,7 @@ export default function CloudHostAI() {
       {page}
       <Footer />
       <Toast message={toast} />
-      <AiChatWidget />
+      {activePage !== "home" && <AiChatWidget />}
     </div>
   );
 }
