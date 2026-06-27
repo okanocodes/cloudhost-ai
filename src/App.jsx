@@ -24,6 +24,7 @@ import MyServicesPage from "./pages/MyServicesPage";
 import TicketsPage from "./pages/TicketsPage";
 import ChatPage from "./pages/ChatPage";
 import FaqPage from "./pages/FaqPage";
+import AiChatWidget from "./components/AIChatWidget";
 
 
 /* ======================================================================
@@ -276,6 +277,7 @@ export default function CloudHostAI() {
       {page}
       <Footer />
       <Toast message={toast} />
+      <AiChatWidget />
     </div>
   );
 }
