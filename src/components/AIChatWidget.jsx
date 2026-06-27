@@ -53,7 +53,7 @@ const SYSTEM_PROMPT = `Sen CloudHost AI adlı bulut altyapı barındırma platfo
 
 ŞİRKET
 - Ad: CloudHost AI
-- Destek: 7/24/365 kesintisiz mühendislik destek katmanı; bir destek talebi açıldığında ortalama ilk yanıt süresi 15 dakikanın altındadır.
+- Destek: 7/24 kesintisiz mühendislik destek katmanı; bir destek talebi açıldığında ortalama ilk yanıt süresi 15 dakikanın altındadır.
 - İade Politikası: Tüm paketlerde 14 günlük kesin para iade garantisi sunuyoruz; karmaşık bir doğrulama kriteri aranmaz. Dashboard > Servislerim üzerinden ilgili faturayı seçip "İade Talep Et" adımını izlemeniz yeterlidir.
 - Veri merkezleri: Frankfurt (DE), Amsterdam (NL), İstanbul (TR), New York (US).
 
@@ -73,35 +73,103 @@ YANIT VERME KURALLARI
 - Kullanıcının yazdığı dille yanıt ver (Türkçe yazarsa Türkçe, İngilizce yazarsa İngilizce).
 - Sadece CloudHost AI'nin ürünleri, politikaları ve destek konularıyla ilgili konuş. İlgisiz bir şey sorulursa, nazikçe barındırma/altyapı konusuna yönlendir.
 - Yalnızca ve sadece kataloğdaki belirli bir paketi gerçekten önerdiğinde, nedenini kendi cümlelerinle açıkladıktan sonra, önerdiğin her paket için ayrı bir satırda TAM OLARAK şu formatı ekle, o satırda başka hiçbir şey olmasın:
-[[PRODUCT: <tam paket adı>]]
-Örnek: [[PRODUCT: VPS Pro]]
+
+ÜRÜN KARTI KURALI
+
+- Kullanıcıya yalnızca gerçekten belirli bir CloudHost AI paketi öneriyorsan bu kuralları uygula.
+- Önce öneri nedenini doğal bir şekilde açıkla.
+- Açıklama bittikten sonra yeni bir satıra yalnızca aşağıdaki ayırıcıyı yaz:
+
+---
+
+- Sonraki satıra yalnızca geçerli bir JSON nesnesi yaz.
+
+Örnek:
+
+VPS Pro paketi orta ölçekli Next.js projeleri için daha uygundur. Daha yüksek CPU ve RAM kapasitesi sayesinde uygulaman daha rahat çalışacaktır.
+
+---
+{"cards":[{"type":"product","id":"vps-pro"}]}
+
+Kurallar:
+
+- Eğer herhangi bir paket önermiyorsan ayırıcı veya JSON ekleme.
+- JSON hakkında hiçbir açıklama yapma.
+- JSON her zaman cevabın en sonunda yer almalıdır.
+- JSON yalnızca aşağıdaki ürün kimliklerini kullanabilir:
+
+web-starter
+vps-basic
+vps-pro
+cloud-enterprise
+
 Tam katalog adını kullan. Bu etiket formatından kullanıcıya asla bahsetme — otomatik olarak bir ürün kartına dönüştürülür.`;
 
 /* --------------------------- Streamed-tag parsing --------------------------- */
-const PRODUCT_TAG_RE = /\[\[PRODUCT:\s*([^\]]+)\]\]/g;
+// const PRODUCT_TAG_RE = /\[\[PRODUCT:\s*([^\]]+)\]\]/g;
 
 /** Splits raw streamed text into renderable segments, hiding an in-progress
  *  (not yet closed) tag at the very end so partial markup never flashes on screen. */
-function parseAssistantContent(raw) {
-    const lastOpen = raw.lastIndexOf("[[PRODUCT:");
-    const safeRaw = lastOpen !== -1 && raw.indexOf("]]", lastOpen) === -1 ? raw.slice(0, lastOpen) : raw;
+// function parseAssistantContent(raw) {
+//     const lastOpen = raw.lastIndexOf("[[PRODUCT:");
+//     const safeRaw = lastOpen !== -1 && raw.indexOf("]]", lastOpen) === -1 ? raw.slice(0, lastOpen) : raw;
 
-    const segments = [];
-    let lastIndex = 0;
-    let match;
-    PRODUCT_TAG_RE.lastIndex = 0;
-    while ((match = PRODUCT_TAG_RE.exec(safeRaw)) !== null) {
-        if (match.index > lastIndex) segments.push({ type: "text", value: safeRaw.slice(lastIndex, match.index) });
-        segments.push({ type: "product", title: match[1].trim() });
-        lastIndex = match.index + match[0].length;
+//     const segments = [];
+//     let lastIndex = 0;
+//     let match;
+//     PRODUCT_TAG_RE.lastIndex = 0;
+//     while ((match = PRODUCT_TAG_RE.exec(safeRaw)) !== null) {
+//         if (match.index > lastIndex) segments.push({ type: "text", value: safeRaw.slice(lastIndex, match.index) });
+//         segments.push({ type: "product", title: match[1].trim() });
+//         lastIndex = match.index + match[0].length;
+//     }
+//     if (lastIndex < safeRaw.length) segments.push({ type: "text", value: safeRaw.slice(lastIndex) });
+//     return segments;
+// }
+
+// function findProduct(title) {
+//     const t = title.toLowerCase();
+//     return PRODUCTS.find((p) => p.title.toLowerCase() === t) || null;
+// }
+
+
+function parseAssistantResponse(response) {
+    const separator = "\n---\n";
+
+    // No metadata found
+    const index = response.lastIndexOf(separator);
+
+    if (index === -1) {
+        return {
+            message: response.trim(),
+            metadata: {},
+        };
     }
-    if (lastIndex < safeRaw.length) segments.push({ type: "text", value: safeRaw.slice(lastIndex) });
-    return segments;
+
+    const message = response.slice(0, index).trim();
+    const json = response.slice(index + separator.length).trim();
+
+    try {
+        const metadata = JSON.parse(json);
+
+        return {
+            message,
+            metadata,
+        };
+    } catch (err) {
+        console.warn("Failed to parse AI metadata:", err);
+
+        // If the AI generated invalid JSON,
+        // show only the human-readable message.
+        return {
+            message,
+            metadata: {},
+        };
+    }
 }
 
-function findProduct(title) {
-    const t = title.toLowerCase();
-    return PRODUCTS.find((p) => p.title.toLowerCase() === t) || null;
+function findProduct(id) {
+    return PRODUCTS.find(p => p.id === id);
 }
 
 /* ------------------------------- UI bits ------------------------------------ */
@@ -117,7 +185,7 @@ const WIDGET_STYLE = `
 
   .hfchat-panel {
     position: fixed; bottom: 92px; right: 24px; z-index: 999999;
-    width: 372px; max-width: calc(100vw - 32px);
+    width: 450px; max-width: calc(100vw - 32px);
     height: 540px; max-height: calc(100vh - 120px);
     background: #0B0F19; border: 1px solid #27324A; border-radius: 16px;
     display: flex; flex-direction: column; overflow: hidden;
@@ -212,11 +280,15 @@ function SendIcon() {
     );
 }
 
-function ProductCard({ title }) {
-    const product = findProduct(title);
+function ProductCard({ productId }) {
+    const product = findProduct(productId);
+
+    if (!product) return null;
     return (
         <div className="hfchat-card">
-            <div className="hfchat-card-title">{product ? product.title : title}</div>
+            <div className="hfchat-card-title">
+                {product.title}
+            </div>
             {product && (
                 <>
                     <div className="hfchat-card-meta">{product.specs}</div>
@@ -246,17 +318,33 @@ function MessageBubble({ message }) {
             </div>
         );
     }
-    const segments = parseAssistantContent(message.content);
-    const showTyping = message.streaming && message.content.length === 0;
+    const showTyping =
+        message.streaming &&
+        message.content.length === 0;
     return (
         <div className="hfchat-row">
             <div className="hfchat-bubble assistant">
                 {showTyping ? (
                     <span className="hfchat-dots"><span /><span /><span /></span>
                 ) : (
-                    segments.map((seg, i) =>
-                        seg.type === "text" ? <React.Fragment key={i}>{seg.value}</React.Fragment> : <ProductCard key={i} title={seg.title} />
-                    )
+                    <>
+                        {message.content}
+
+                        {message.metadata?.cards?.map((card) => {
+                            switch (card.type) {
+                                case "product":
+                                    return (
+                                        <ProductCard
+                                            key={card.id}
+                                            productId={card.id}
+                                        />
+                                    );
+
+                                default:
+                                    return null;
+                            }
+                        })}
+                    </>
                 )}
             </div>
         </div>
@@ -302,6 +390,7 @@ export default function AiChatWidget() {
         setBusy(true);
         setMessages((prev) => [...prev, { role: "assistant", content: "", streaming: true }]);
 
+
         try {
             const stream = clientRef.current.chatCompletionStream({
                 model: "meta-llama/Llama-3.1-8B-Instruct", // swap for any HF-hosted chat model you have access to
@@ -311,22 +400,49 @@ export default function AiChatWidget() {
                 temperature: 0.4,
             });
 
+
+
             let acc = "";
             for await (const chunk of stream) {
+
                 if (cancelledRef.current) return;
+
                 const delta = chunk.choices?.[0]?.delta?.content;
+
                 if (delta) {
+
                     acc += delta;
+
+                    const separator = "\n---\n";
+
+                    // Hide the metadata while streaming
+                    const visibleText = acc.includes(separator)
+                        ? acc.split(separator)[0]
+                        : acc;
+
                     setMessages((prev) => {
                         const next = [...prev];
-                        next[next.length - 1] = { role: "assistant", content: acc, streaming: true };
+
+                        next[next.length - 1] = {
+                            role: "assistant",
+                            content: visibleText,
+                            streaming: true,
+                        };
+
                         return next;
                     });
                 }
             }
             setMessages((prev) => {
                 const next = [...prev];
-                next[next.length - 1] = { role: "assistant", content: acc, streaming: false };
+                const parsed = parseAssistantResponse(acc);
+
+                next[next.length - 1] = {
+                    role: "assistant",
+                    content: parsed.message,
+                    metadata: parsed.metadata,
+                    streaming: false
+                };
                 return next;
             });
         } catch (err) {
@@ -382,6 +498,7 @@ export default function AiChatWidget() {
                     <div className="hfchat-messages" ref={scrollRef}>
                         {messages.map((m, i) => (
                             <MessageBubble key={i} message={m} />
+
                         ))}
                     </div>
 
