@@ -151,7 +151,7 @@ const PROTECTED_PAGES = ["dashboard", "myservices"];
 
 export default function CloudHostAI() {
   const [activePage, setActivePage] = useState("home");
-  const [selectedServiceId, setSelectedServiceId] = useState("vps-pro");
+  // const [selectedServiceId, setSelectedServiceId] = useState("vps-pro");
   const [session, setSession] = useState({ isLoggedIn: false, name: "", email: "" });
   const [authNotice, setAuthNotice] = useState("");
   const [toast, setToast] = useState("");
@@ -182,9 +182,9 @@ export default function CloudHostAI() {
   }
 
   function selectService(id) {
-    setSelectedServiceId(id);
+    //setSelectedServiceId(id);
     goTo("detail");
-  }
+  } 
 
   function handleLogin(user) {
     setSession({ isLoggedIn: true, ...user });
@@ -246,12 +246,12 @@ export default function CloudHostAI() {
     setTimeout(() => setHighlight(false), 2400);
   }
 
-  const selectedService = SERVICES.find((s) => s.id === selectedServiceId);
+  // const selectedService = SERVICES.find((s) => s.id === selectedServiceId);
 
   let page;
   if (activePage === "home") page = <HomePage goTo={goTo} selectService={selectService} />;
   else if (activePage === "services") page = <ServicesPage selectService={selectService} />;
-  else if (activePage === "detail") page = <ServiceDetailPage service={selectedService} goTo={goTo} onPurchase={handlePurchase} />;
+  else if (activePage === "detail") page = <ServiceDetailPage goTo={goTo} onPurchase={handlePurchase} />;
   else if (activePage === "login") page = <LoginPage onLogin={handleLogin} goTo={goTo} notice={authNotice} />;
   else if (activePage === "register") page = <RegisterPage onRegister={handleRegister} goTo={goTo} />;
   else if (activePage === "dashboard") page = <DashboardPage session={session} instances={instances} ticketRegistry={ticketRegistry} goTo={goTo} />;

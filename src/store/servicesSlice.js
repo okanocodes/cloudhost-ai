@@ -6,6 +6,7 @@ const initialState = {
   categories: ["Tümü", "VPS", "Cloud Server", "Web Hosting"],
   selectedCategory: "Tümü",
   highlightedServiceId: null,
+  selectedServiceId: "vps-pro",
 };
 
 const servicesSlice = createSlice({
@@ -19,10 +20,17 @@ const servicesSlice = createSlice({
     setHighlightedService: (state, action) => {
       state.highlightedServiceId = action.payload;
     },
+
+    setSelectedServiceId: (state, action) => {
+      state.selectedServiceId = action.payload;
+    },
   },
 });
 
-export const { setSelectedCategory, setHighlightedService } =
-  servicesSlice.actions;
+export const {
+  setSelectedCategory,
+  setHighlightedService,
+  setSelectedServiceId,
+} = servicesSlice.actions;
 
 export default servicesSlice.reducer;

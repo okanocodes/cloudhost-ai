@@ -9,6 +9,7 @@ import ServiceCard from "../components/ServiceCard";
 import {
   setSelectedCategory,
   setHighlightedService,
+  setSelectedServiceId
 } from "../store/servicesSlice";
 
 export default function ServicesPage({ selectService }) {
@@ -74,12 +75,15 @@ export default function ServicesPage({ selectService }) {
             <ServiceCard
               key={service.id}
               service={service}
-              onSelect={selectService}
               highlighted={highlightedServiceId === service.id}
+              onSelect={(id) => {
+                dispatch(setSelectedServiceId(id));
+                selectService(id);
+              }} 
             />
           ))}
         </div>
       </div>
     </div>
   );
-};
+}
