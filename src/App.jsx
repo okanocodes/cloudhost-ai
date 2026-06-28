@@ -25,8 +25,9 @@ import FaqPage from "./pages/FaqPage";
 import PurchasePage from "./pages/PurchasePage";
 import AboutUsPage from "./pages/AboutUsPage";
 import AiChatWidget from "./components/AIChatWidget";
-import { logout as authLogout, setActiveTab, setNotice } from "./store/authSlice";
+import { logout as authLogout, setNotice } from "./store/authSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { Routes, Route, Navigate, useNavigate, useLocation, Link } from "react-router-dom";
 
 
 /* ======================================================================
@@ -69,48 +70,53 @@ import { useDispatch, useSelector } from "react-redux";
 
 /* --------------------------------- NavBar --------------------------------- */
 function NavBar({ session, onLogout }) {
-  const activeTab = useSelector((state) => state.auth.activeTab);
-  const dispatch = useDispatch();
+  const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const publicLinks = [
-    { id: "home", label: "Ana Sayfa" },
-    { id: "services", label: "Hizmetler" },
-    { id: "about", label: "Hakkımızda" },
-    { id: "faq", label: "SSS" },
+    { id: "home", path: "/", label: "Ana Sayfa" },
+    { id: "services", path: "/services", label: "Hizmetler" },
+    { id: "about", path: "/about", label: "Hakkımızda" },
+    { id: "faq", path: "/faq", label: "SSS" },
   ];
+
+  const isActive = (path) => {
+    if (path === "/") return location.pathname === "/";
+    return location.pathname.startsWith(path);
+  };
+
   return (
     <header className="sticky top-0 z-40 border-b border-token bg-canvas backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-3.5">
-        <button onClick={() => dispatch(setActiveTab("home"))} className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <Logo /> <span className="font-display text-sm font-semibold text-ink">{COMPANY.name}</span>
-        </button>
+        </Link>
 
         <nav className="hidden md:flex items-center gap-1 ml-4">
           {publicLinks.map((l) => (
-            <button
+            <Link
               key={l.id}
-              onClick={() => dispatch(setActiveTab(l.id))}
-              className={`rounded-lg px-3 py-2 text-sm transition ${activeTab === l.id ? "text-ink bg-card" : "text-muted hover:text-ink"}`}
+              to={l.path}
+              className={`rounded-lg px-3 py-2 text-sm transition ${isActive(l.path) ? "text-ink bg-card" : "text-muted hover:text-ink"}`}
             >
               {l.label}
-            </button>
+            </Link>
           ))}
         </nav>
 
         <div className="ml-auto hidden md:flex items-center gap-2">
           {session.isLoggedIn ? (
             <>
-              <GhostButton onClick={() => dispatch(setActiveTab("dashboard"))} className="py-2"><LayoutDashboard size={14} /> Panel</GhostButton>
-              <GhostButton onClick={() => dispatch(setActiveTab("myservices"))} className="py-2"><Server size={14} /> Servislerim</GhostButton>
-              <GhostButton onClick={() => dispatch(setActiveTab("tickets"))} className="py-2"><Ticket size={14} /> Destek</GhostButton>
+              <Link to="/dashboard"><GhostButton className="py-2"><LayoutDashboard size={14} /> Panel</GhostButton></Link>
+              <Link to="/myservices"><GhostButton className="py-2"><Server size={14} /> Servislerim</GhostButton></Link>
+              <Link to="/tickets"><GhostButton className="py-2"><Ticket size={14} /> Destek</GhostButton></Link>
               <button onClick={onLogout} className="ml-1 flex items-center gap-1.5 rounded-lg border border-token-light px-3 py-2 text-sm text-muted hover:text-danger">
                 <LogOut size={14} /> {session.name}
               </button>
             </>
           ) : (
             <>
-              <GhostButton onClick={() => dispatch(setActiveTab("login"))} className="py-2">Giriş Yap</GhostButton>
-              <PrimaryButton onClick={() => dispatch(setActiveTab("register"))} className="py-2">Kayıt Ol</PrimaryButton>
+              <Link to="/login"><GhostButton className="py-2">Giriş Yap</GhostButton></Link>
+              <Link to="/register"><PrimaryButton className="py-2">Kayıt Ol</PrimaryButton></Link>
             </>
           )}
         </div>
@@ -122,17 +128,30 @@ function NavBar({ session, onLogout }) {
 
       {mobileOpen && (
         <div className="md:hidden border-t border-token px-4 py-3 space-y-1">
-          {[...publicLinks, ...(session.isLoggedIn ? [{ id: "dashboard", label: "Panel" }, { id: "myservices", label: "Servislerim" }, { id: "tickets", label: "Destek Merkezi" }] : [{ id: "login", label: "Giriş Yap" }, { id: "register", label: "Kayıt Ol" }])].map((l) => (
-            <button
+          {[
+            ...publicLinks,
+            ...(session.isLoggedIn 
+              ? [
+                  { id: "dashboard", path: "/dashboard", label: "Panel" },
+                  { id: "myservices", path: "/myservices", label: "Servislerim" },
+                  { id: "tickets", path: "/tickets", label: "Destek Merkezi" }
+                ] 
+              : [
+                  { id: "login", path: "/login", label: "Giriş Yap" },
+                  { id: "register", path: "/register", label: "Kayıt Ol" }
+                ])
+          ].map((l) => (
+            <Link
               key={l.id}
-              onClick={() => { dispatch(setActiveTab(l.id)); setMobileOpen(false); }}
-              className={`block w-full rounded-lg px-3 py-2 text-left text-sm ${activeTab === l.id ? "text-ink bg-card" : "text-muted"}`}
+              to={l.path}
+              onClick={() => setMobileOpen(false)}
+              className={`block w-full rounded-lg px-3 py-2 text-left text-sm ${isActive(l.path) ? "text-ink bg-card" : "text-muted"}`}
             >
               {l.label}
-            </button>
+            </Link>
           ))}
           {session.isLoggedIn && (
-            <button onClick={onLogout} className="block w-full rounded-lg px-3 py-2 text-left text-sm text-danger">Çıkış Yap</button>
+            <button onClick={() => { onLogout(); setMobileOpen(false); }} className="block w-full rounded-lg px-3 py-2 text-left text-sm text-danger">Çıkış Yap</button>
           )}
         </div>
       )}
@@ -151,11 +170,23 @@ function Footer() {
   );
 }
 
-/* ==================================== APP ==================================== */
+/* ==================================== APP ======================= */
+function ProtectedRoute({ children }) {
+  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+  const dispatch = useDispatch();
+
+  if (!isLoggedIn) {
+    dispatch(setNotice("Bu sayfayı görüntülemek için giriş yapmalısınız."));
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
 
 export default function CloudHostAI() {
   const auth = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const session = {
     isLoggedIn: auth.isLoggedIn,
@@ -172,10 +203,11 @@ export default function CloudHostAI() {
         showToast(`Tekrar hoş geldin, ${displayName}!`);
       } else {
         showToast("Çıkış yapıldı.");
+        navigate("/");
       }
       prevIsLoggedInRef.current = auth.isLoggedIn;
     }
-  }, [auth.isLoggedIn, auth.user]);
+  }, [auth.isLoggedIn, auth.user, navigate]);
 
   const [toast, setToast] = useState("");
 
@@ -188,30 +220,27 @@ export default function CloudHostAI() {
     window.__chaiToastTimer = window.setTimeout(() => setToast(""), 2800);
   }
 
-  let page;
-  if (auth.activeTab === "home") page = <HomePage />;
-  else if (auth.activeTab === "services") page = <ServicesPage />;
-
-  else if (auth.activeTab === "detail") page = <ServiceDetailPage />;
-  else if (auth.activeTab === "purchase") page = <PurchasePage />;
-  else if (auth.activeTab === "login") page = <LoginPage />;
-  else if (auth.activeTab === "register") page = <RegisterPage />;
-
-  else if (auth.activeTab === "dashboard") page = <DashboardPage />;
-  else if (auth.activeTab === "myservices") page = <MyServicesPage />;
-  else if (auth.activeTab === "tickets") page = <TicketsPage />;
-  else if (auth.activeTab === "faq") page = <FaqPage />;
-  else if (auth.activeTab === "about") page = <AboutUsPage />;
-  else page = <HomePage />;
-
   return (
     <div className="chai-root min-h-screen">
       <style>{GLOBAL_STYLE}</style>
       <NavBar session={session} onLogout={() => dispatch(authLogout())} />
-      {page}
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/services" element={<ServicesPage />} />
+        <Route path="/services/:id" element={<ServiceDetailPage />} />
+        <Route path="/purchase/:id" element={<ProtectedRoute><PurchasePage /></ProtectedRoute>} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        <Route path="/myservices" element={<ProtectedRoute><MyServicesPage /></ProtectedRoute>} />
+        <Route path="/tickets" element={<ProtectedRoute><TicketsPage /></ProtectedRoute>} />
+        <Route path="/faq" element={<FaqPage />} />
+        <Route path="/about" element={<AboutUsPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
       <Footer />
       <Toast message={toast} />
-      {auth.activeTab !== "home" && <AiChatWidget />}
+      {location.pathname !== "/" && <AiChatWidget />}
     </div>
   );
 }

@@ -10,10 +10,11 @@ import {
   setSelectedCategory,
   setSelectedServiceId,
 } from "../store/servicesSlice";
-import { setActiveTab } from "../store/authSlice";
+import { useNavigate } from "react-router-dom";
 
 export default function ServicesPage() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const services = useSelector((state) => state.services.list);
   const categories = useSelector((state) => state.services.categories);
@@ -80,7 +81,7 @@ export default function ServicesPage() {
               service={service}
               onSelect={(id) => {
                 dispatch(setSelectedServiceId(id));
-                dispatch(setActiveTab("detail"));
+                navigate(`/services/${id}`);
               }}
             />
           ))}

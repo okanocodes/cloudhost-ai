@@ -3,14 +3,20 @@ import AuthShell from "../components/AuthShell";
 import PrimaryButton from "../components/ui/PrimaryButton";
 import { Mail, Lock, AlertTriangle, Eye, EyeOff } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { login, setActiveTab } from "../store/authSlice";
+import { login } from "../store/authSlice";
+import { Link, Navigate } from "react-router-dom";
 
 export default function LoginPage() {
+    const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
     const [email, setEmail] = useState("admin@admin.com");
     const [password, setPassword] = useState("0000");
     const [showPassword, setShowPassword] = useState(false);
     const dispatch = useDispatch();
     const notice = useSelector((state) => state.auth.notice);
+
+    if (isLoggedIn) {
+        return <Navigate to="/dashboard" replace />;
+    }
 
     return (
         <AuthShell title="Giriş Yap" subtitle="CloudHost AI hesabınıza erişin">
@@ -52,7 +58,7 @@ export default function LoginPage() {
             <p className="mt-4 text-center text-xs text-faint">Bu bir demo ortamıdır, gerçek kimlik doğrulama yapılmaz.</p>
             <p className="mt-3 text-center text-sm text-muted">
                 Hesabınız yok mu?{" "}
-                <button onClick={() => dispatch(setActiveTab("register"))} className="text-brand hover:underline">Kayıt Ol</button>
+                <Link to="/register" className="text-brand hover:underline font-medium">Kayıt Ol</Link>
             </p>
         </AuthShell>
     );

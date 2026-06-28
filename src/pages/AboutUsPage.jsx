@@ -2,12 +2,11 @@ import React from "react";
 import { Sparkles, Shield, Cpu, MapPin, CheckCircle, Server } from "lucide-react";
 import { COMPANY } from "../data/knowledgeBase";
 import SectionEyebrow from "../components/ui/SectionEyebrow";
-import { useDispatch } from "react-redux";
-import { setActiveTab } from "../store/authSlice";
 import PrimaryButton from "../components/ui/PrimaryButton";
+import { useNavigate } from "react-router-dom";
 
 export default function AboutUsPage() {
-  const dispatch = useDispatch();
+  const navigate = useNavigate();
   return (
     <div className="px-6 py-12 md:py-20">
       <div className="mx-auto max-w-4xl space-y-16">
@@ -121,7 +120,7 @@ export default function AboutUsPage() {
             </p>
             <div className="flex justify-center gap-3">
               <div className="w-full max-w-xs">
-                <PrimaryButton className="w-full" onClick={() => dispatch(setActiveTab("register"))}>
+                <PrimaryButton className="w-full" onClick={() => navigate("/register")}>
                   Kayıt Ol ve Başla
                 </PrimaryButton>
               </div>

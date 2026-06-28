@@ -9,17 +9,18 @@ import FaqItem from "../components/ui/FaqItem";
 import { HelpCircle, Server, Sparkles } from "lucide-react";
 import { useSelector, useDispatch } from 'react-redux';
 import { decrement, increment } from "../store/counterSlice";
-import { setActiveTab } from "../store/authSlice";
 import { setSelectedServiceId } from "../store/servicesSlice";
+import { useNavigate } from "react-router-dom";
 
 export default function HomePage() {
     const [openFaq, setOpenFaq] = useState(["faq-reboot"]);
     const count = useSelector((state) => state.counter.value);
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const handleSelectService = (id) => {
         dispatch(setSelectedServiceId(id));
-        dispatch(setActiveTab("detail"));
+        navigate(`/services/${id}`);
     };
 
     return (
@@ -36,10 +37,10 @@ export default function HomePage() {
                             asistanı doğru paketi seçmenizden sunucu sorunlarını çözmenize kadar her adımda yanınızda.
                         </p>
                         <div className="mt-6 flex flex-wrap gap-3">
-                            <PrimaryButton onClick={() => dispatch(setActiveTab("services"))}>
+                            <PrimaryButton onClick={() => navigate("/services")}>
                                 Paketleri Gör
                             </PrimaryButton>
-                            <GhostButton onClick={() => dispatch(setActiveTab("register"))}>Ücretsiz Hesap Oluştur</GhostButton>
+                            <GhostButton onClick={() => navigate("/register")}>Ücretsiz Hesap Oluştur</GhostButton>
                         </div>
                         <div className="mt-8 flex flex-wrap gap-4 text-xs font-display text-muted">
                             <span className="inline-flex items-center gap-1.5">{COMPANY.support}</span>

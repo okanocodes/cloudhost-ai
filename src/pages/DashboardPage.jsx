@@ -2,11 +2,11 @@ import React from "react";
 import MetricCard from "../components/MetricCard";
 import { Server, DollarSign, Ticket, HelpCircle } from "lucide-react";
 import { SERVICES } from "../data/knowledgeBase";
-import { useDispatch, useSelector } from "react-redux";
-import { setActiveTab } from "../store/authSlice";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 export default function DashboardPage() {
-    const dispatch = useDispatch();
+    const navigate = useNavigate();
     const auth = useSelector((state) => state.auth);
     const displayName = auth.user ? (auth.user.name || auth.user.email.split("@")[0]) : "";
     const userEmail = auth.user ? auth.user.email : "";
@@ -47,7 +47,7 @@ export default function DashboardPage() {
                     {shortcuts.map((s) => (
                         <button
                             key={s.id}
-                            onClick={() => dispatch(setActiveTab(s.id))}
+                            onClick={() => navigate("/" + s.id)}
                             className="text-left rounded-2xl border border-token bg-card p-5 bg-card-hover transition"
                         >
                             <s.icon size={18} className="text-ai" />

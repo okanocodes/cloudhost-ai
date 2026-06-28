@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAIChat } from "../hooks/useAIChat";
 import { findProduct } from "../lib/aiChatService";
+import { Link } from "react-router-dom";
+import { Bot, Send, Sparkles, X } from "lucide-react";
+
 
 /* =============================================================================
    AiChatWidget.jsx
@@ -124,31 +127,9 @@ const WIDGET_STYLE = `
   }
 `;
 
-function BotIcon() {
-    return (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <rect x="4" y="8" width="16" height="11" rx="3" stroke="currentColor" strokeWidth="1.8" />
-            <path d="M12 8V4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            <circle cx="12" cy="3" r="1.4" fill="currentColor" />
-            <circle cx="8.5" cy="13.5" r="1.3" fill="currentColor" />
-            <circle cx="15.5" cy="13.5" r="1.3" fill="currentColor" />
-        </svg>
-    );
-}
-function CloseIcon() {
-    return (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        </svg>
-    );
-}
-function SendIcon() {
-    return (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M3 11l18-8-8 18-2-8-8-2z" fill="currentColor" />
-        </svg>
-    );
-}
+
+
+
 
 function ProductCard({ productId }) {
     const product = findProduct(productId);
@@ -165,10 +146,9 @@ function ProductCard({ productId }) {
                     <div className="hfchat-card-meta">{product.price}</div>
                 </>
             )}
-            {/* TODO: swap href="#" for a real route, e.g. `/services/${product?.id}` */}
-            <a href={`/hizmetler/${product?.id}`} className="hfchat-card-link">
+            <Link to={`/services/${product?.id}`} className="hfchat-card-link">
                 Paketi incele →
-            </a>
+            </Link>
         </div>
     );
 }
@@ -270,13 +250,13 @@ export default function AiChatWidget() {
             {open && (
                 <div className="hfchat-panel" role="dialog" aria-label="Yapay zekâ destek sohbeti">
                     <div className="hfchat-header">
-                        <BotIcon />
+                        <Bot />
                         <div>
                             <strong>CloudHost AI Asistanı</strong>
                             <div><span>Genellikle saniyeler içinde yanıt verir</span></div>
                         </div>
                         <button className="hfchat-close" onClick={() => setOpen(false)} aria-label="Sohbeti kapat">
-                            <CloseIcon />
+                            <X />
                         </button>
                     </div>
 
@@ -298,14 +278,14 @@ export default function AiChatWidget() {
                             disabled={busy}
                         />
                         <button className="hfchat-send" onClick={handleSend} disabled={busy || !input.trim()} aria-label="Mesaj gönder">
-                            <SendIcon />
+                            <Send />
                         </button>
                     </div>
                 </div>
             )}
 
             <button className="hfchat-launcher" onClick={() => setOpen((v) => !v)} aria-label="Yapay zekâ destek sohbetini aç">
-                {open ? <CloseIcon /> : <BotIcon />}
+                {open ? <X /> : <Bot />}
             </button>
         </>
     );

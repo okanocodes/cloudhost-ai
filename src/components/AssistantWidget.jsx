@@ -3,6 +3,7 @@ import { Bot, Send, Sparkles } from "lucide-react";
 import { aiRespond } from "../lib/aiEngine";
 import { useAIChat } from "../hooks/useAIChat";
 import { findProduct } from "../lib/aiChatService";
+import { Link } from "react-router-dom";
 
 export default function AssistantWidget({
   title = "AI Asistan",
@@ -110,7 +111,7 @@ export default function AssistantWidget({
                   <div className="mt-2 rounded-lg border border-ai bg-ai-soft px-3 py-2 font-display text-xs">
                     <div className="text-ai font-medium">{m.service.name}</div>
                     <div className="text-muted">{m.service.cpu} Çekirdek · {m.service.ram}GB RAM · ${m.service.price}/ay</div>
-                    <a href={`/hizmetler/${m.service.id}`} className="inline-flex items-center gap-1 mt-2 font-semibold text-ai hover:underline">
+                    <a href={`/services/${m.service.id}`} className="inline-flex items-center gap-1 mt-2 font-semibold text-ai hover:underline">
                       Paketi incele →
                     </a>
                   </div>
@@ -124,9 +125,9 @@ export default function AssistantWidget({
                       <div className="text-ai font-medium">{product.title}</div>
                       <div className="text-muted mt-0.5">{product.specs}</div>
                       <div className="text-muted mt-0.5">{product.price}</div>
-                      <a href={`/hizmetler/${product.id}`} className="inline-flex items-center gap-1 mt-2 font-semibold text-ai hover:underline">
+                      <Link to={`/services/${product.id}`} className="inline-flex items-center gap-1 mt-2 font-semibold text-ai hover:underline">
                         Paketi incele →
-                      </a>
+                      </Link>
                     </div>
                   );
                 })}

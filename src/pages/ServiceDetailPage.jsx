@@ -11,22 +11,20 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 
 import CategoryIcon from "../components/ui/CategoryIcon";
-import AssistantWidget from "../components/AssistantWidget";
 import PrimaryButton from "../components/ui/PrimaryButton";
 
-import { assessSuitability } from "../lib/aiEngine";
 import { fetchServicesData } from "../store/servicesSlice";
-import { setActiveTab, setNotice } from "../store/authSlice";
+import { setNotice } from "../store/authSlice";
+import { useParams, useNavigate } from "react-router-dom";
 
 export default function ServiceDetailPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
   const services = useSelector((state) => state.services.list);
   const company = useSelector((state) => state.services.company);
-  const selectedServiceId = useSelector(
-    (state) => state.services.selectedServiceId
-  );
   const status = useSelector((state) => state.services.status);
   const error = useSelector((state) => state.services.error);
 
@@ -36,15 +34,17 @@ export default function ServiceDetailPage() {
     }
   }, [status, dispatch]);
 
-  const service = services.find((s) => s.id === selectedServiceId);
+  const service = services.find((s) => s.id === id);
 
   const handlePurchase = () => {
     if (!isLoggedIn) {
       dispatch(setNotice("Satın almak için önce giriş yapmalısınız."));
-      dispatch(setActiveTab("login"));
+      navigate("/login");
       return;
     }
-    dispatch(setActiveTab("purchase"));
+    if (service) {
+      navigate(`/purchase/${service.id}`);
+    }
   };
 
   if (status === "loading") {
@@ -61,7 +61,7 @@ export default function ServiceDetailPage() {
     <div className="px-6 py-12">
       <div className="mx-auto max-w-6xl">
         <button
-          onClick={() => dispatch(setActiveTab("services"))}
+          onClick={() => navigate("/services")}
           className="text-sm text-muted hover:text-ink inline-flex items-center gap-1 mb-4"
         >
           <ChevronRight size={14} className="rotate-180" />

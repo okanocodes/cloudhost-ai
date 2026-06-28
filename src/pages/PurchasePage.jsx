@@ -3,21 +3,22 @@ import { useSelector, useDispatch } from "react-redux";
 import { CreditCard, ShieldCheck, Lock, RotateCw, CheckCircle } from "lucide-react";
 import { SERVICES } from "../data/knowledgeBase";
 import { addInstance } from "../store/myServicesSlice";
-import { setActiveTab } from "../store/authSlice";
 import PrimaryButton from "../components/ui/PrimaryButton";
 import GhostButton from "../components/ui/GhostButton";
+import { useParams, useNavigate } from "react-router-dom";
 
 export default function PurchasePage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const services = useSelector((state) => state.services.list);
-  const selectedServiceId = useSelector((state) => state.services.selectedServiceId);
   const userEmail = useSelector((state) => state.auth.user?.email);
   const instances = useSelector((state) => state.myServices.instances);
 
   // Find the selected service from slice list or knowledge base fallback
   const service =
-    services.find((s) => s.id === selectedServiceId) ||
-    SERVICES.find((s) => s.id === selectedServiceId);
+    services.find((s) => s.id === id) ||
+    SERVICES.find((s) => s.id === id);
 
   // Filter instances of the logged-in user to determine the next instance name
   const userInstances = instances.filter((i) => i.userEmail === userEmail);
@@ -38,7 +39,7 @@ export default function PurchasePage() {
     return (
       <div className="px-6 py-16 text-center">
         <p className="text-danger">Satın alınacak hizmet bulunamadı.</p>
-        <GhostButton onClick={() => dispatch(setActiveTab("services"))} className="mt-4">
+        <GhostButton onClick={() => navigate("/services")} className="mt-4">
           Hizmet Kataloğuna Dön
         </GhostButton>
       </div>
@@ -124,7 +125,7 @@ export default function PurchasePage() {
           if (window.showAppToast) {
             window.showAppToast(`${service.name} başarıyla satın alındı ve aktifleştirildi.`);
           }
-          dispatch(setActiveTab("myservices"));
+          navigate("/myservices");
         }, 1200);
       }, 1500);
     }, 1500);
@@ -319,7 +320,7 @@ export default function PurchasePage() {
                 <div className="pt-4 flex gap-3">
                   <GhostButton
                     type="button"
-                    onClick={() => dispatch(setActiveTab("detail"))}
+                    onClick={() => navigate(`/services/${service.id}`)}
                     className="flex-1"
                   >
                     Vazgeç

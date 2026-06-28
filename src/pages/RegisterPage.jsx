@@ -2,15 +2,21 @@ import React, { useState } from "react";
 import AuthShell from "../components/AuthShell";
 import PrimaryButton from "../components/ui/PrimaryButton";
 import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { useDispatch } from "react-redux";
-import { register, setActiveTab } from "../store/authSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { register } from "../store/authSlice";
+import { Link, Navigate } from "react-router-dom";
 
 export default function RegisterPage() {
+    const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const dispatch = useDispatch();
+
+    if (isLoggedIn) {
+        return <Navigate to="/dashboard" replace />;
+    }
 
     return (
         <AuthShell title="Hesap Oluştur" subtitle="Saniyeler içinde başlayın">
@@ -53,7 +59,7 @@ export default function RegisterPage() {
             <p className="mt-4 text-center text-xs text-faint">Bu bir demo ortamıdır, gerçek kimlik doğrulama yapılmaz.</p>
             <p className="mt-3 text-center text-sm text-muted">
                 Zaten hesabınız var mı?{" "}
-                <button onClick={() => dispatch(setActiveTab("login"))} className="text-brand hover:underline">Giriş Yap</button>
+                <Link to="/login" className="text-brand hover:underline font-medium">Giriş Yap</Link>
             </p>
         </AuthShell>
     );
