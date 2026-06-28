@@ -11,7 +11,7 @@ import {
   setSelectedServiceId,
 } from "../store/servicesSlice";
 
-export default function ServicesPage() {
+export default function ServicesPage({ goTo }) {
   const dispatch = useDispatch();
 
   const services = useSelector((state) => state.services.list);
@@ -79,6 +79,7 @@ export default function ServicesPage() {
               service={service}
               onSelect={(id) => {
                 dispatch(setSelectedServiceId(id));
+                if (goTo) goTo("detail");
               }}
             />
           ))}

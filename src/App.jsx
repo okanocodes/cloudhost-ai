@@ -26,6 +26,7 @@ import FaqPage from "./pages/FaqPage";
 import AiChatWidget from "./components/AIChatWidget";
 import { logout as authLogout, setActiveTab, setNotice } from "./store/authSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { setSelectedServiceId } from "./store/servicesSlice";
 
 
 /* ======================================================================
@@ -154,7 +155,6 @@ const PROTECTED_PAGES = ["dashboard", "myservices", "tickets"];
 export default function CloudHostAI() {
   const [activePage, setActivePage] = useState("home");
 
-  const [selectedServiceId, setSelectedServiceId] = useState("vps-pro");
   const auth = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
@@ -215,7 +215,7 @@ export default function CloudHostAI() {
   }
 
   function selectService(id) {
-    //setSelectedServiceId(id);
+    dispatch(setSelectedServiceId(id));
     goTo("detail");
   } 
 
@@ -259,13 +259,11 @@ export default function CloudHostAI() {
     setTimeout(() => setHighlight(false), 2400);
   }
 
-  // const selectedService = SERVICES.find((s) => s.id === selectedServiceId);
-
   let page;
   if (activePage === "home") page = <HomePage goTo={goTo} selectService={selectService} />;
-  else if (activePage === "services") page = <ServicesPage />;
+  else if (activePage === "services") page = <ServicesPage goTo={goTo} />;
  
-  else if (activePage === "detail") page = <ServiceDetailPage service={selectedService} goTo={goTo} onPurchase={handlePurchase} />;
+  else if (activePage === "detail") page = <ServiceDetailPage goTo={goTo} onPurchase={handlePurchase} />;
   else if (activePage === "login") page = <LoginPage />;
   else if (activePage === "register") page = <RegisterPage />;
 

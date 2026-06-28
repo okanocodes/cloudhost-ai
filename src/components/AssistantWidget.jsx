@@ -81,16 +81,15 @@ export default function AssistantWidget({
         style={isFull ? { minHeight: "360px", maxHeight: "480px" } : { maxHeight: "260px" }}
       >
         {messages.map((m, i) => {
-          console.log("AssistantWidget rendering message:", m);
           return (
             <div key={i} className={`chai-fade-up flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
               <div
                 style={{ maxWidth: "85%" }}
                 className={`rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${m.role === "user"
-                    ? "bg-brand text-white"
-                    : m.error
-                      ? "bg-danger-soft border border-danger text-danger"
-                      : "bg-card-soft border border-token text-ink"
+                  ? "bg-brand text-white"
+                  : m.error
+                    ? "bg-danger-soft border border-danger text-danger"
+                    : "bg-card-soft border border-token text-ink"
                   }`}
               >
                 {m.role !== "user" && (

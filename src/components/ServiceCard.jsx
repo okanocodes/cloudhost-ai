@@ -6,7 +6,8 @@ import GhostButton from "./ui/GhostButton";
 export default function ServiceCard({ service, onSelect, highlighted }) {
     return (
         <div
-            className={`flex flex-col rounded-2xl border bg-card p-5 transition ${highlighted ? "ai-recommended border-ai" : "border-token"
+            onClick={() => onSelect && onSelect(service.id)}
+            className={`flex flex-col rounded-2xl border bg-card p-5 transition cursor-pointer hover:border-brand ${highlighted ? "ai-recommended border-ai" : "border-token"
                 }`}
         >
             <div className="flex items-center justify-between mb-3">
@@ -32,7 +33,7 @@ export default function ServiceCard({ service, onSelect, highlighted }) {
 
             <p className="mt-4 text-xs leading-relaxed text-muted flex-1">{service.bestFor}</p>
 
-            <GhostButton onClick={() => onSelect(service.id)} className="mt-4 w-full hover:border-brand">
+            <GhostButton onClick={(e) => { e.stopPropagation(); onSelect && onSelect(service.id); }} className="mt-4 w-full hover:border-brand">
                 İncele <ArrowRight size={14} />
             </GhostButton>
         </div>
