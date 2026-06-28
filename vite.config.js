@@ -116,7 +116,7 @@ Tam katalog adını kullan. Bu etiket formatından kullanıcıya asla bahsetme �
                       "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                      model: "Qwen/Qwen2.5-7.2B-Instruct",
+                      model: "Qwen/Qwen2.5-7B-Instruct",
                       messages: [{ role: "system", content: SYSTEM_PROMPT }, ...cleanMessages],
                       max_tokens: 400,
                       temperature: 0.4,
