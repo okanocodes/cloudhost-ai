@@ -1,0 +1,130 @@
+================================================================================
+CLOUDHOST AI - SINIF SUNUM REHBERİ (ÖNCE FRONTEND KODU -> EN SON TÜM SAYFALAR DEMOSU)
+================================================================================
+
+Bu rehber, 2 kişilik grubunuzun yapacağı uzun (15-20 dakika) sunum için hazırlanmıştır. 
+Sunum boyunca Sunucu 1 ekranda sürekli kod dosyalarını göstererek satır satır analiz ederken; 
+Sunucu 2 ise canlı uygulamayı yansıtarak tüm sayfaları kapsayan adım adım senaryoyu yürütecektir.
+
+Süre Dağılımı:
+- Giriş & Genel Bakış: 2 Dakika
+- Kod & Mimari Detayları (Sunucu 1): 8 Dakika (Sürekli kod incelemesi - Önce Frontend, sonra Backend)
+- Arayüz, Redux & Yapay Zekâ Demosu (Sunucu 2): 8 Dakika (Canlı arayüz senaryosu - Girişsiz Sayfalardan Girişli Sayfalara Geçiş)
+- Kapanış & Soru-Cevap: 2 Dakika
+
+================================================================================
+BÖLÜM 1: GİRİŞ VE PROJE ÖZETİ (Ortak Başlangıç - 2 Dakika)
+================================================================================
+
+[Ekran Durumu: Tarayıcıda CloudHost AI Kamu Giriş Yapılmamış Ana Sayfası açık]
+
+SUNUCU 2 (Arayüz & Demo):
+- "Değerli hocamız ve sevgili arkadaşlar, sunumumuza hoş geldiniz. Bugün sizlere dönem projemiz olan 'CloudHost AI' bulut sunucu yönetim ve yapay zekâ asistan panelini tanıtacağız.
+- Projemizi geliştirirken amacımız, kullanıcıların karmaşık bulut altyapı ayarlarını kolayca yapabildiği, sunucularını canlı olarak kontrol edebildiği (başlatma, durdurma, yeniden başlatma) ve altyapı konularında akıllı bir yapay zekâ asistanından gerçek zamanlı rehberlik alabildiği bütünleşik bir sistem sunmaktı.
+- Projemizi iki bağımsız katmana ayırdık. Şimdi [Sunucu 1'in Adı], kod editörünü açarak projenin kod yapısını anlatmaya ön yüz (frontend) kodlarımızdan başlayacak."
+
+================================================================================
+BÖLÜM 2: FRONTEND REACT HOOK VE YÖNETİM KOD ANALİZİ (Sunucu 1 - 4 Dakika)
+================================================================================
+
+[Ekran Durumu: VS Code - 'src/hooks/useAIChat.js' ve 'src/lib/aiChatService.js' açık]
+
+SUNUCU 1 (Kod & Altyapı):
+- "Teşekkürler. Sunumumuza öncelikle ön yüz (frontend) kod mimarimizle başlıyoruz.
+- Ekrandaki `src/hooks/useAIChat.js` dosyası, yapay zekâ sohbet kutusunun tüm arayüz durumlarını (state) yöneten özel bir React Hook'udur.
+- [useAIChat.js dosyasını açın]
+- 5. ve 8. satırlarda sohbet geçmişini tutan `messages`, kullanıcının yazdığı metni tutan `input` ve asistanın meşguliyet durumunu belirten `busy` durum değişkenlerimizi tanımladık.
+- 17. satırdaki `streamReply` fonksiyonu asenkron olarak çalışır ve kullanıcı mesaj gönderdiğinde tetiklenir.
+- 26. satırda yerel çalışmada `localhost:3000` portunu, canlıda ise `VITE_API_URL` çevre değişkenindeki Render sunucu URL'ini hedef alarak sunucumuza istek atar.
+- 57. satırda `response.body.getReader()` kullanarak sunucumuzdan akan ham byte verilerini okumaya başlıyoruz. `TextDecoder` ile bu byte'ları string karakterlere dönüştürüyoruz.
+- [62. satırdaki while döngüsüne gelin]
+- `while(true)` döngüsü, veri akışı bitene kadar sürekli döner. Her döngüde gelen parçayı satırlara bölüyoruz. Satır "data: " ile başlıyorsa JSON nesnesine parse ediyoruz ve delta içerisindeki yeni kelimeyi `acc` değişkenine ekliyoruz.
+- 87. satırda `setMessages` kullanarak arayüzdeki son mesajın içeriğini anlık olarak güncelliyoruz. Bu sayede kullanıcı kelimelerin tek tek yazıldığını görüyor.
+- [104. satıra gelin]
+- Akış tamamlandığında, biriken ham cevabı `parseAssistantResponse` yardımcı fonksiyonumuza gönderiyoruz.
+- [src/lib/aiChatService.js dosyasını açın ve parseAssistantResponse fonksiyonuna gelin]
+- Bu fonksiyon, yapay zekânın ürettiği metin ile metnin en altına eklediği `---` ayıracından sonra gelen JSON ürün kartı kodunu birbirinden ayırır.
+- Eğer metinde JSON formatında bir ürün kartı varsa, bunu `metadata` objesi olarak arayüze döner. Arayüzümüz de bu veriyi alıp görsel bir kart olarak render eder.
+- Şimdi bu ön yüz isteklerinin arka tarafta nasıl karşılandığını görmek için Backend (Arka Yüz) kodlarımıza geçelim."
+
+================================================================================
+BÖLÜM 3: BACKEND GÜVENLİK VE EXPRESS API KOD ANALİZİ (Sunucu 1 - 4 Dakika)
+================================================================================
+
+[Ekran Durumu: VS Code - 'server/package.json' ve 'server/index.js' açık]
+
+SUNUCU 1 (Kod & Altyapı):
+- "Ekrandaki `server/package.json` dosyasında görebileceğiniz gibi, sunucu tarafında Node.js, Express framework, tarayıcı engellerini aşmak için `cors`, çevre değişkenleri için `dotenv` ve yapay zekâ entegrasyonu için resmi `@huggingface/inference` kütüphanesini kullandık.
+- [server/index.js dosyasını açın] Şimdi `server/index.js` dosyamıza geçelim.
+- 6. satırda `dotenv.config()` ile HuggingFace API anahtarımızı sunucu belleğine çekiyoruz. 11 ve 12. satırlarda CORS ve JSON ayrıştırıcı middleware'lerimizi tanımladık. Bu sayede tarayıcıdan gelen API isteklerini güvenle okuyabiliyoruz.
+- 14. satırda başlayan `SYSTEM_PROMPT` sabitimiz, yapay zekânın kimliğini belirliyor. Asistana 'Sen CloudHost AI asistanısın' talimatını vererek veri merkezlerimizi, hosting paket kataloğumuzu ve iade politikalarımızı bu prompt içine sabitledik. Yapay zekâ bu sınırların dışına asla çıkamaz.
+- [70. satırdaki /api/chat rotasına gelin]
+- Burası backend API'ımızın kalbidir. Ön yüzden gelen POST isteğini yakalıyoruz. 79. satırda `HF_TOKEN` değerini güvenli sunucu değişkenlerinden okuyoruz. Bu sayede API anahtarımız tarayıcıya gitmiyor ve tamamen gizli kalıyor.
+- 87. satıra dikkat ederseniz, gelen mesajları `cleanMessages` dizisine map ediyoruz. Tarayıcıdan gelen `{ streaming, error, metadata }` gibi ön yüze özel nitelikleri ayıklıyoruz. Çünkü Hugging Face OpenAI uyumlu API şeması, mesaj objelerinde sadece `role` ve `content` alanlarını kabul eder, fazlasını gönderirsek hata fırlatır.
+- 92. satırda `new InferenceClient(token)` ile istemciyi oluşturuyoruz ve `chatCompletionStream` fonksiyonunu çağırıyoruz. Modeli hızlı ve güçlü olan `Qwen/Qwen2.5-7B-Instruct` olarak belirledik.
+- 102. satırda yanıt başlıklarını (headers) yazıyoruz: `Content-Type: text/event-stream`, `Cache-Control: no-cache` ve `Connection: keep-alive`. Bu başlıklar, sunucunun bağlantıyı kapatmayıp veriyi parça parça tarayıcıya akıtmasını (Server-Sent Events) sağlar.
+- 106. satırda `for await (const chunk of stream)` döngüsü ile Hugging Face'den gelen her kelime parçasını anlık olarak tarayıcıya yazıyoruz. Akış bittiğinde ise `[DONE]` bayrağını gönderip bağlantıyı kapatıyoruz.
+- [70. satırdaki handleFallback fonksiyonuna gelin]
+- Ağ hatası veya DNS çözümleme hatası (ENOTFOUND) olması durumunda devreye giren bir `handleFallback` yazdık. Eğer sunucumuz Hugging Face'e erişemezse, sistem çökmek yerine bu fonksiyonla sunucu tarafında simüle edilmiş akışlı mesajlar üretir, böylece platformumuz 100% çalışmaya devam eder.
+- Şimdi [Sunucu 2'nin Adı], bu yazdığımız kodların arayüzde nasıl çalıştığını ve canlı uygulamanın tüm sayfalarını sırayla gösterecek."
+
+================================================================================
+BÖLÜM 4: CANLI UYGULAMA DEMOSU VE TÜM SAYFALARIN İNCELENMESİ (Sunucu 2 - 8 Dakika)
+================================================================================
+
+[Ekran Durumu: Tarayıcıda CloudHost AI Kamu / Giriş Yapılmamış Ana Sayfası açık]
+
+SUNUCU 2 (Arayüz & Demo):
+- "Teşekkürler. Şimdi hep birlikte uygulamamızın tüm sekmelerini ve sayfalarını kapsayan canlı senaryomuzu çalıştıralım.
+
+[Aşama 1: Giriş Yapılmamış Genel Ana Sayfa (Public Homepage)]
+- Sunuma şu an herhangi bir üye girişi yapılmamış genel **Ana Sayfa** ile başlıyoruz. Bu sayfa, platformumuzun genel özelliklerini, altyapı yeteneklerini gösteren kamuya açık landing page'dir.
+- (SAĞ TARAFTAKİ AI CHAT BOTUYLA DEMO GÖSTER)
+
+[Aşama 2: Hakkımızda (About Us) Sayfası]
+- [Üst menüden 'Hakkımızda' bağlantısına tıklayın]
+- Bu sayfada CloudHost AI altyapısını, veri merkezlerimizin coğrafi lokasyonlarını (Frankfurt, Amsterdam, İstanbul, New York) ve müşteri odaklı politikalarımızı kurumsal olarak tanıtıyoruz.
+
+[Aşama 3: Sıkça Sorulan Sorular (FAQ / SSS) Sayfası]
+- [Üst menüden SSS bağlantısına tıklayın]
+- Kullanıcıların en çok karşılaştığı teknik veya idari soruları derlediğimiz **Sıkça Sorulan Sorular** kısmıdır. Buradaki akordeon menülere tıklayarak detaylı yanıtları okuyabiliyoruz.
+
+[Aşama 4: Üyelik İşlemleri ve Giriş Yapılması (Login & Register)]
+- [Sağ üstteki 'Giriş Yap' butonuna tıklayın]
+- Şimdi üye sistemimizi göstermek için Giriş Yap sayfasına geçiyorum. Karşımıza e-posta ve şifre giriş formu çıkıyor.
+- [Alttaki 'Kayıt Ol' linkine basın]
+- Burası da **Kayıt Ol** sayfamız. İsim, e-posta ve şifre girilip kolayca yeni hesap oluşturulabiliyor. Şimdi giriş ekranına dönüp hesabımızla giriş yapalım.
+- [Giriş sayfasına dönüp bilgileri girin ve 'Giriş Yap' butonuna basın. Sayfa sizi otomatik olarak korumalı kontrol paneline yönlendirecektir]
+
+[Aşama 5: Korumalı Kontrol Paneli (Dashboard)]
+- Başarıyla giriş yaptıktan sonra sistem bizi otomatik olarak korumalı bir rota olan **Kontrol Paneli** sayfasına yönlendirdi. Bu sayfa sadece giriş yapmış üyelerimize özeldir. 
+- Burada aktif sunucu sayılarını, aylık fatura tutarlarını ve sunucuların kaynak durumunu (CPU, RAM, Disk) grafikler üzerinden izleyebiliyoruz.
+
+[Aşama 6: Servislerim (My Services) Sayfası - Korumalı Rota]
+- [Üst menüden 'Servislerim' bağlantısına tıklayın]
+- Burası kullanıcının sahip olduğu aktif bulut sunucularını listelediği alandır. Redux Toolkit entegrasyonu sayesinde buradaki kontrol butonlarımız canlı olarak çalışır.
+- Örneğin, sunuculardan birinin yanındaki **'Yeniden Başlat' (Reboot)** butonuna basıyorum. Durumun anlık olarak 'Yeniden Başlatılıyor' moduna geçtiğini ve ardından başarıyla 'Aktif' durumuna döndüğünü görebiliyoruz. **'Durdur'** ve **'Başlat'** butonları da aynı şekilde sunucu durumunu güncelliyor.
+
+[Aşama 7: Satın Alma (Purchase) Sayfası - Korumalı Rota]
+- [Üst menüden 'Satın Alma' bağlantısına tıklayın]
+- Burası yeni sunucu paketlerimizi listelediğimiz satın alma kataloğudur. Web Hosting Starter, VPS Basic, VPS Pro ve Enterprise seçeneklerimiz yer alıyor.
+- Buradan 'VPS Pro' paketi için **'Satın Al'** butonuna tıklıyorum. Gerekli onay işlemlerinden sonra sunucumuz provizyon ediliyor ve sunucu listemize anında yeni bir sunucu olarak ekleniyor.
+
+[Aşama 8: Destek / Taleplerim (Tickets) Sayfası - Korumalı Rota]
+- [Üst menüden 'Destek' bağlantısına tıklayın]
+- Kullanıcılarımızın teknik ekiplerimizle iletişime geçebildiği **Destek Talepleri** sayfasıdır. Burada aktif destek biletlerini, durumlarını (Beklemede, Çözüldü) görebilir ve yeni talepler oluşturabiliriz.
+
+[Aşama 9: Yapay Zekâ Destek Asistanı Demosu]
+- [Sağ alttaki AI Sohbet penceresini açın]
+- Son olarak yapay zekâ asistanımızı test edelim. Asistanımıza 'Next.js e-ticaret projem için sunucu önerir misin?' sorusunu soruyorum.
+- Yapay zekâ Server-Sent Events (SSE) teknolojisiyle kelime kelime yanıt veriyor.
+- Cevabın bittiği yerde otomatik olarak interaktif bir 'VPS Pro' ürün kartı oluşuyor. Kullanıcı bu karta tıklayarak tek adımda satın alma sayfasına yönlenebiliyor."
+
+================================================================================
+BÖLÜM 5: KAPANIŞ VE SORU-CEVAP (Ortak Kapanış - 2 Dakika)
+================================================================================
+
+SUNUCU 2 (Arayüz & Demo):
+- "Sunumumuzun sonuna geldik. Projemizi geliştirirken hem modern sunucu durum yönetimini hem de güvenli yapay zekâ entegrasyonu mimarilerini uçtan uca tecrübe etme şansımız oldu.
+- Bizi sabırla dinlediğiniz için teşekkür ederiz. Şimdi sorularınız varsa memnuniyetle yanıtlamak isteriz."
+================================================================================
