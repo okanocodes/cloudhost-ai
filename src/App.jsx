@@ -21,7 +21,6 @@ import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import MyServicesPage from "./pages/MyServicesPage";
 import TicketsPage from "./pages/TicketsPage";
-import ChatPage from "./pages/ChatPage";
 import FaqPage from "./pages/FaqPage";
 import PurchasePage from "./pages/PurchasePage";
 import AboutUsPage from "./pages/AboutUsPage";
@@ -77,7 +76,6 @@ function NavBar({ session, onLogout }) {
     { id: "home", label: "Ana Sayfa" },
     { id: "services", label: "Hizmetler" },
     { id: "about", label: "Hakkımızda" },
-    { id: "chat", label: "AI Destek" },
     { id: "faq", label: "SSS" },
   ];
   return (
@@ -193,7 +191,7 @@ export default function CloudHostAI() {
   let page;
   if (auth.activeTab === "home") page = <HomePage />;
   else if (auth.activeTab === "services") page = <ServicesPage />;
- 
+
   else if (auth.activeTab === "detail") page = <ServiceDetailPage />;
   else if (auth.activeTab === "purchase") page = <PurchasePage />;
   else if (auth.activeTab === "login") page = <LoginPage />;
@@ -202,7 +200,6 @@ export default function CloudHostAI() {
   else if (auth.activeTab === "dashboard") page = <DashboardPage />;
   else if (auth.activeTab === "myservices") page = <MyServicesPage />;
   else if (auth.activeTab === "tickets") page = <TicketsPage />;
-  else if (auth.activeTab === "chat") page = <ChatPage />;
   else if (auth.activeTab === "faq") page = <FaqPage />;
   else if (auth.activeTab === "about") page = <AboutUsPage />;
   else page = <HomePage />;

@@ -4,13 +4,14 @@ import { COMPANY } from "../data/knowledgeBase";
 import SectionEyebrow from "../components/ui/SectionEyebrow";
 import { useDispatch } from "react-redux";
 import { setActiveTab } from "../store/authSlice";
+import PrimaryButton from "../components/ui/PrimaryButton";
 
 export default function AboutUsPage() {
   const dispatch = useDispatch();
   return (
     <div className="px-6 py-12 md:py-20">
       <div className="mx-auto max-w-4xl space-y-16">
-        
+
         {/* Hero Section */}
         <section className="text-center space-y-4">
           <SectionEyebrow icon={Sparkles} tone="brand">
@@ -20,8 +21,8 @@ export default function AboutUsPage() {
             Bulut Yönetimini <span className="text-brand">Yapay Zekâ</span> ile Yeniden Tanımlıyoruz
           </h1>
           <p className="mt-4 max-w-2xl mx-auto text-muted leading-relaxed">
-            {COMPANY.name}, geleneksel bulut altyapısı karmaşıklığını ortadan kaldırmak için kuruldu. 
-            Güçlü VPS, Cloud Server ve Web Hosting servislerimizi gömülü yapay zekâ asistanımızla birleştirerek, 
+            {COMPANY.name}, geleneksel bulut altyapısı karmaşıklığını ortadan kaldırmak için kuruldu.
+            Güçlü VPS, Cloud Server ve Web Hosting servislerimizi gömülü yapay zekâ asistanımızla birleştirerek,
             altyapınızı izleme ve yönetme süreçlerini zahmetsiz hale getiriyoruz.
           </p>
         </section>
@@ -34,7 +35,7 @@ export default function AboutUsPage() {
             </div>
             <h3 className="text-lg font-semibold text-ink">Yapay Zekâ Desteği</h3>
             <p className="text-xs text-muted leading-relaxed">
-              En doğru paketi seçmekten sunucu hatalarını anında gidermeye kadar her adımda 
+              En doğru paketi seçmekten sunucu hatalarını anında gidermeye kadar her adımda
               yanınızda olan akıllı asistan ile bulut süreçlerinizi otomatikleştirin.
             </p>
           </div>
@@ -45,7 +46,7 @@ export default function AboutUsPage() {
             </div>
             <h3 className="text-lg font-semibold text-ink">Modern Küresel Ağ</h3>
             <p className="text-xs text-muted leading-relaxed">
-              SSD ve yüksek hızlı NVMe depolama teknolojileriyle donatılmış, kesintisiz 
+              SSD ve yüksek hızlı NVMe depolama teknolojileriyle donatılmış, kesintisiz
               bulut sunucu deneyimini dünya standartlarında yaşayın.
             </p>
           </div>
@@ -56,7 +57,7 @@ export default function AboutUsPage() {
             </div>
             <h3 className="text-lg font-semibold text-ink">Güvenilirlik ve İade</h3>
             <p className="text-xs text-muted leading-relaxed">
-              Tüm altyapı hizmetlerimizde {COMPANY.refundDays} günlük şartsız para iade garantisi 
+              Tüm altyapı hizmetlerimizde {COMPANY.refundDays} günlük şartsız para iade garantisi
               ve PCI-DSS uyumlu güvenli ödeme sistemleri sunuyoruz.
             </p>
           </div>
@@ -94,8 +95,8 @@ export default function AboutUsPage() {
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-ink">Sizin İçin Buradayız</h2>
             <p className="text-sm text-muted leading-relaxed">
-              Bulut yönetiminin sadece sunuculardan ibaret olmadığının farkındayız. Bu nedenle 
-              donanımımız kadar destek süreçlerimizi de yapay zekâ asistanımız ve uzman kadromuzla 
+              Bulut yönetiminin sadece sunuculardan ibaret olmadığının farkındayız. Bu nedenle
+              donanımımız kadar destek süreçlerimizi de yapay zekâ asistanımız ve uzman kadromuzla
               kesintisiz kılacak şekilde tasarladık.
             </p>
             <ul className="space-y-2">
