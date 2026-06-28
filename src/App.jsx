@@ -25,6 +25,8 @@ import TicketsPage from "./pages/TicketsPage";
 import ChatPage from "./pages/ChatPage";
 import FaqPage from "./pages/FaqPage";
 import AiChatWidget from "./components/AIChatWidget";
+import { logout as authLogout, setActiveTab, setNotice } from "./store/authSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 
 /* ======================================================================
@@ -148,22 +150,50 @@ function Footer() {
 }
 
 /* ==================================== APP ==================================== */
-const PROTECTED_PAGES = ["dashboard", "myservices"];
+const PROTECTED_PAGES = ["dashboard", "myservices", "tickets"];
 
 export default function CloudHostAI() {
   const [activePage, setActivePage] = useState("home");
-  // const [selectedServiceId, setSelectedServiceId] = useState("vps-pro");
-  const [session, setSession] = useState({ isLoggedIn: false, name: "", email: "" });
-  const [authNotice, setAuthNotice] = useState("");
+
+  const [selectedServiceId, setSelectedServiceId] = useState("vps-pro");
+  const auth = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+
+  const session = {
+    isLoggedIn: auth.isLoggedIn,
+    name: auth.user ? (auth.user.name || auth.user.email.split("@")[0]) : "",
+    email: auth.user ? auth.user.email : ""
+  };
+
+  const prevActiveTabRef = useRef(auth.activeTab);
+  const prevIsLoggedInRef = useRef(auth.isLoggedIn);
+
+  useEffect(() => {
+    if (prevIsLoggedInRef.current !== auth.isLoggedIn) {
+      if (auth.isLoggedIn) {
+        setActivePage("dashboard");
+        const displayName = auth.user ? (auth.user.name || auth.user.email.split("@")[0]) : "Kullanıcı";
+        showToast(`Tekrar hoş geldin, ${displayName}!`);
+      } else {
+        setActivePage("home");
+        showToast("Çıkış yapıldı.");
+      }
+      prevIsLoggedInRef.current = auth.isLoggedIn;
+    }
+    if (prevActiveTabRef.current !== auth.activeTab) {
+      setActivePage(auth.activeTab);
+      prevActiveTabRef.current = auth.activeTab;
+    }
+  }, [auth.isLoggedIn, auth.activeTab, auth.user]);
+
   const [toast, setToast] = useState("");
   const [instances, setInstances] = useState([
     { id: 1, name: "web-prod-01", service: "VPS Pro", status: "active", ip: "185.42.11.7" },
     { id: 2, name: "db-staging-02", service: "Cloud Enterprise", status: "active", ip: "185.42.11.18" },
     { id: 3, name: "landing-site-03", service: "Web Hosting Starter", status: "stopped", ip: "185.42.11.29" },
   ]);
-  const [ticketRegistry, setTicketRegistry] = useState([
-    { id: 1042, subject: "Faturalama sorgusu", message: "Geçen ayın faturası beklediğimden yüksek geldi.", status: "resolved" },
-  ]);
+  const allTickets = useSelector((state) => state.tickets.tickets);
+  const ticketRegistry = allTickets.filter((t) => t.userEmail === session.email);
   const [highlight, setHighlight] = useState(false);
 
   function showToast(msg) {
@@ -174,11 +204,14 @@ export default function CloudHostAI() {
 
   function goTo(page) {
     if (PROTECTED_PAGES.includes(page) && !session.isLoggedIn) {
-      setAuthNotice("Bu sayfayı görüntülemek için giriş yapmalısınız.");
-      setActivePage("login");
+      dispatch(setNotice("Bu sayfayı görüntülemek için giriş yapmalısınız."));
+      dispatch(setActiveTab("login"));
       return;
     }
-    setAuthNotice("");
+    dispatch(setNotice(""));
+    if (["login", "register", "dashboard"].includes(page)) {
+      dispatch(setActiveTab(page));
+    }
     setActivePage(page);
   }
 
@@ -187,28 +220,13 @@ export default function CloudHostAI() {
     goTo("detail");
   } 
 
-  function handleLogin(user) {
-    setSession({ isLoggedIn: true, ...user });
-    showToast(`Tekrar hoş geldin, ${user.name}!`);
-    setActivePage("dashboard");
-  }
 
-  function handleRegister(user) {
-    setSession({ isLoggedIn: true, ...user });
-    showToast("Hesabın oluşturuldu, hoş geldin!");
-    setActivePage("dashboard");
-  }
 
-  function handleLogout() {
-    setSession({ isLoggedIn: false, name: "", email: "" });
-    showToast("Çıkış yapıldı.");
-    setActivePage("home");
-  }
 
   function handlePurchase(service) {
     if (!session.isLoggedIn) {
-      setAuthNotice("Satın almak için önce giriş yapmalısınız.");
-      setActivePage("login");
+      dispatch(setNotice("Satın almak için önce giriş yapmalısınız."));
+      dispatch(setActiveTab("login"));
       return;
     }
     const newInstance = {
@@ -236,11 +254,6 @@ export default function CloudHostAI() {
     );
   }
 
-  function handleCreateTicket({ subject, message }) {
-    const id = 1000 + ticketRegistry.length + 1;
-    setTicketRegistry((prev) => [{ id, subject, message, status: "open" }, ...prev]);
-    showToast(`Destek talebiniz oluşturuldu (#${id})`);
-  }
 
   function triggerHighlight() {
     setHighlight(true);
@@ -251,10 +264,12 @@ export default function CloudHostAI() {
 
   let page;
   if (activePage === "home") page = <HomePage goTo={goTo} selectService={selectService} />;
-  else if (activePage === "services") page = <ServicesPage selectService={selectService} />;
-  else if (activePage === "detail") page = <ServiceDetailPage goTo={goTo} onPurchase={handlePurchase} />;
-  else if (activePage === "login") page = <LoginPage onLogin={handleLogin} goTo={goTo} notice={authNotice} />;
-  else if (activePage === "register") page = <RegisterPage onRegister={handleRegister} goTo={goTo} />;
+  else if (activePage === "services") page = <ServicesPage />;
+ 
+  else if (activePage === "detail") page = <ServiceDetailPage service={selectedService} goTo={goTo} onPurchase={handlePurchase} />;
+  else if (activePage === "login") page = <LoginPage />;
+  else if (activePage === "register") page = <RegisterPage />;
+
   else if (activePage === "dashboard") page = <DashboardPage session={session} instances={instances} ticketRegistry={ticketRegistry} goTo={goTo} />;
   else if (activePage === "myservices")
     page = (
@@ -265,7 +280,7 @@ export default function CloudHostAI() {
         highlightActions={{ value: highlight, trigger: triggerHighlight }}
       />
     );
-  else if (activePage === "tickets") page = <TicketsPage ticketRegistry={ticketRegistry} onCreateTicket={handleCreateTicket} />;
+  else if (activePage === "tickets") page = <TicketsPage />;
   else if (activePage === "chat") page = <ChatPage />;
   else if (activePage === "faq") page = <FaqPage />;
   else page = <HomePage goTo={goTo} selectService={selectService} />;
@@ -273,7 +288,7 @@ export default function CloudHostAI() {
   return (
     <div className="chai-root min-h-screen">
       <style>{GLOBAL_STYLE}</style>
-      <NavBar activePage={activePage} goTo={goTo} session={session} onLogout={handleLogout} />
+      <NavBar activePage={activePage} goTo={goTo} session={session} onLogout={() => dispatch(authLogout())} />
       {page}
       <Footer />
       <Toast message={toast} />

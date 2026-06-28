@@ -3,26 +3,21 @@ import { Server } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 
 import SectionEyebrow from "../components/ui/SectionEyebrow";
-import ServiceFinderBar from "../components/ServiceFinderBar";
 import ServiceCard from "../components/ServiceCard";
 
 import {
   fetchServicesData,
   setSelectedCategory,
-  setHighlightedService,
   setSelectedServiceId,
 } from "../store/servicesSlice";
 
-export default function ServicesPage({ selectService }) {
+export default function ServicesPage() {
   const dispatch = useDispatch();
 
   const services = useSelector((state) => state.services.list);
   const categories = useSelector((state) => state.services.categories);
   const selectedCategory = useSelector(
     (state) => state.services.selectedCategory
-  );
-  const highlightedServiceId = useSelector(
-    (state) => state.services.highlightedServiceId
   );
   const status = useSelector((state) => state.services.status);
   const error = useSelector((state) => state.services.error);
@@ -61,12 +56,6 @@ export default function ServicesPage({ selectService }) {
           Tüm VPS, Cloud Server ve Web Hosting katmanlarını karşılaştırın.
         </p>
 
-        <div className="mt-6">
-          <ServiceFinderBar
-            onMatch={(service) => dispatch(setHighlightedService(service.id))}
-          />
-        </div>
-
         <div className="mt-8 flex gap-2 overflow-x-auto pb-1">
           {categories.map((category) => (
             <button
@@ -88,10 +77,8 @@ export default function ServicesPage({ selectService }) {
             <ServiceCard
               key={service.id}
               service={service}
-              highlighted={highlightedServiceId === service.id}
               onSelect={(id) => {
                 dispatch(setSelectedServiceId(id));
-                selectService(id);
               }}
             />
           ))}
