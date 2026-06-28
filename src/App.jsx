@@ -10,7 +10,6 @@ import {
 import { COMPANY, FAQ, SERVICES } from "./data/knowledgeBase";
 import { GLOBAL_STYLE } from './design-tokens'
 import Logo from "./components/ui/Logo";
-import ServiceFinderBar from "./components/ServiceFinderBar";
 import GhostButton from "./components/ui/GhostButton";
 import PrimaryButton from "./components/ui/PrimaryButton";
 import Toast from "./components/ui/Toast";
