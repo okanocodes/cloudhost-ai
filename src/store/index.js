@@ -3,6 +3,7 @@ import counterReducer from "./counterSlice";
 import servicesReducer from "./servicesSlice";
 import authReducer from "./authSlice";
 import ticketReducer from "./ticketSlice";
+import myServicesReducer from "./myServicesSlice";
 
 export const store = configureStore({
   reducer: {
@@ -17,5 +18,6 @@ export const store = configureStore({
     // messaging: messageReducer,
     auth: authReducer,
     tickets: ticketReducer,
+    myServices: myServicesReducer,
   },
 });

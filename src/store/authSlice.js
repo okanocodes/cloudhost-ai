@@ -10,7 +10,7 @@ const initialState = {
   ],
   user: null,
   isLoggedIn: false,
-  activeTab: "login",
+  activeTab: "home",
   notice: "",
 };
 
@@ -41,7 +41,7 @@ const authSlice = createSlice({
     logout: (state) => {
       state.isLoggedIn = false;
       state.user = null;
-      state.activeTab = "login";
+      state.activeTab = "home";
       state.notice = "";
     },
     register: (state, action) => {
@@ -53,7 +53,15 @@ const authSlice = createSlice({
       state.notice = "";
     },
     setActiveTab: (state, action) => {
-      state.activeTab = action.payload;
+      const page = action.payload;
+      const PROTECTED_PAGES = ["dashboard", "myservices", "tickets"];
+      if (PROTECTED_PAGES.includes(page) && !state.isLoggedIn) {
+        state.notice = "Bu sayfayı görüntülemek için giriş yapmalısınız.";
+        state.activeTab = "login";
+      } else {
+        state.notice = "";
+        state.activeTab = page;
+      }
     },
     setNotice: (state, action) => {
       state.notice = action.payload;

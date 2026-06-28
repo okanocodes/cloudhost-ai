@@ -2,10 +2,17 @@ import React from "react";
 import MetricCard from "../components/MetricCard";
 import { Server, DollarSign, Ticket, Bot, HelpCircle } from "lucide-react";
 import { SERVICES } from "../data/knowledgeBase";
+import { useDispatch, useSelector } from "react-redux";
+import { setActiveTab } from "../store/authSlice";
 
-export default function DashboardPage({ session, instances, ticketRegistry, goTo }) {
-    const activeCount = instances.filter((i) => i.status !== "stopped").length;
-    const monthlyTotal = instances.reduce((sum, i) => {
+export default function DashboardPage({ session, ticketRegistry }) {
+    const dispatch = useDispatch();
+    const userEmail = useSelector((state) => state.auth.user?.email);
+    const instances = useSelector((state) => state.myServices.instances);
+    const userInstances = instances.filter((i) => i.userEmail === userEmail);
+
+    const activeCount = userInstances.filter((i) => i.status !== "stopped").length;
+    const monthlyTotal = userInstances.reduce((sum, i) => {
         const svc = SERVICES.find((s) => s.name === i.service);
         return sum + (svc ? svc.price : 0);
     }, 0);
@@ -35,7 +42,7 @@ export default function DashboardPage({ session, instances, ticketRegistry, goTo
                     {shortcuts.map((s) => (
                         <button
                             key={s.id}
-                            onClick={() => goTo(s.id)}
+                            onClick={() => dispatch(setActiveTab(s.id))}
                             className="text-left rounded-2xl border border-token bg-card p-5 bg-card-hover transition"
                         >
                             <s.icon size={18} className="text-ai" />

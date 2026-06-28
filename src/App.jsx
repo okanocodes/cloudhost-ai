@@ -23,6 +23,7 @@ import MyServicesPage from "./pages/MyServicesPage";
 import TicketsPage from "./pages/TicketsPage";
 import ChatPage from "./pages/ChatPage";
 import FaqPage from "./pages/FaqPage";
+import PurchasePage from "./pages/PurchasePage";
 import AiChatWidget from "./components/AIChatWidget";
 import { logout as authLogout, setActiveTab, setNotice } from "./store/authSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -68,7 +69,9 @@ import { setSelectedServiceId } from "./store/servicesSlice";
 // Pages have been moved to `src/pages/*`. Imports above provide implementations.
 
 /* --------------------------------- NavBar --------------------------------- */
-function NavBar({ activePage, goTo, session, onLogout }) {
+function NavBar({ session, onLogout }) {
+  const activeTab = useSelector((state) => state.auth.activeTab);
+  const dispatch = useDispatch();
   const [mobileOpen, setMobileOpen] = useState(false);
   const publicLinks = [
     { id: "home", label: "Ana Sayfa" },
@@ -79,7 +82,7 @@ function NavBar({ activePage, goTo, session, onLogout }) {
   return (
     <header className="sticky top-0 z-40 border-b border-token bg-canvas backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-3.5">
-        <button onClick={() => goTo("home")} className="flex items-center gap-2">
+        <button onClick={() => dispatch(setActiveTab("home"))} className="flex items-center gap-2">
           <Logo /> <span className="font-display text-sm font-semibold text-ink">{COMPANY.name}</span>
         </button>
 
@@ -87,8 +90,8 @@ function NavBar({ activePage, goTo, session, onLogout }) {
           {publicLinks.map((l) => (
             <button
               key={l.id}
-              onClick={() => goTo(l.id)}
-              className={`rounded-lg px-3 py-2 text-sm transition ${activePage === l.id ? "text-ink bg-card" : "text-muted hover:text-ink"}`}
+              onClick={() => dispatch(setActiveTab(l.id))}
+              className={`rounded-lg px-3 py-2 text-sm transition ${activeTab === l.id ? "text-ink bg-card" : "text-muted hover:text-ink"}`}
             >
               {l.label}
             </button>
@@ -98,17 +101,17 @@ function NavBar({ activePage, goTo, session, onLogout }) {
         <div className="ml-auto hidden md:flex items-center gap-2">
           {session.isLoggedIn ? (
             <>
-              <GhostButton onClick={() => goTo("dashboard")} className="py-2"><LayoutDashboard size={14} /> Panel</GhostButton>
-              <GhostButton onClick={() => goTo("myservices")} className="py-2"><Server size={14} /> Servislerim</GhostButton>
-              <GhostButton onClick={() => goTo("tickets")} className="py-2"><Ticket size={14} /> Destek</GhostButton>
+              <GhostButton onClick={() => dispatch(setActiveTab("dashboard"))} className="py-2"><LayoutDashboard size={14} /> Panel</GhostButton>
+              <GhostButton onClick={() => dispatch(setActiveTab("myservices"))} className="py-2"><Server size={14} /> Servislerim</GhostButton>
+              <GhostButton onClick={() => dispatch(setActiveTab("tickets"))} className="py-2"><Ticket size={14} /> Destek</GhostButton>
               <button onClick={onLogout} className="ml-1 flex items-center gap-1.5 rounded-lg border border-token-light px-3 py-2 text-sm text-muted hover:text-danger">
                 <LogOut size={14} /> {session.name}
               </button>
             </>
           ) : (
             <>
-              <GhostButton onClick={() => goTo("login")} className="py-2">Giriş Yap</GhostButton>
-              <PrimaryButton onClick={() => goTo("register")} className="py-2">Kayıt Ol</PrimaryButton>
+              <GhostButton onClick={() => dispatch(setActiveTab("login"))} className="py-2">Giriş Yap</GhostButton>
+              <PrimaryButton onClick={() => dispatch(setActiveTab("register"))} className="py-2">Kayıt Ol</PrimaryButton>
             </>
           )}
         </div>
@@ -123,8 +126,8 @@ function NavBar({ activePage, goTo, session, onLogout }) {
           {[...publicLinks, ...(session.isLoggedIn ? [{ id: "dashboard", label: "Panel" }, { id: "myservices", label: "Servislerim" }, { id: "tickets", label: "Destek Merkezi" }] : [{ id: "login", label: "Giriş Yap" }, { id: "register", label: "Kayıt Ol" }])].map((l) => (
             <button
               key={l.id}
-              onClick={() => { goTo(l.id); setMobileOpen(false); }}
-              className={`block w-full rounded-lg px-3 py-2 text-left text-sm ${activePage === l.id ? "text-ink bg-card" : "text-muted"}`}
+              onClick={() => { dispatch(setActiveTab(l.id)); setMobileOpen(false); }}
+              className={`block w-full rounded-lg px-3 py-2 text-left text-sm ${activeTab === l.id ? "text-ink bg-card" : "text-muted"}`}
             >
               {l.label}
             </button>
@@ -150,11 +153,8 @@ function Footer() {
 }
 
 /* ==================================== APP ==================================== */
-const PROTECTED_PAGES = ["dashboard", "myservices", "tickets"];
 
 export default function CloudHostAI() {
-  const [activePage, setActivePage] = useState("home");
-
   const auth = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
@@ -164,36 +164,27 @@ export default function CloudHostAI() {
     email: auth.user ? auth.user.email : ""
   };
 
-  const prevActiveTabRef = useRef(auth.activeTab);
   const prevIsLoggedInRef = useRef(auth.isLoggedIn);
 
   useEffect(() => {
     if (prevIsLoggedInRef.current !== auth.isLoggedIn) {
       if (auth.isLoggedIn) {
-        setActivePage("dashboard");
         const displayName = auth.user ? (auth.user.name || auth.user.email.split("@")[0]) : "Kullanıcı";
         showToast(`Tekrar hoş geldin, ${displayName}!`);
       } else {
-        setActivePage("home");
         showToast("Çıkış yapıldı.");
       }
       prevIsLoggedInRef.current = auth.isLoggedIn;
     }
-    if (prevActiveTabRef.current !== auth.activeTab) {
-      setActivePage(auth.activeTab);
-      prevActiveTabRef.current = auth.activeTab;
-    }
-  }, [auth.isLoggedIn, auth.activeTab, auth.user]);
+  }, [auth.isLoggedIn, auth.user]);
 
   const [toast, setToast] = useState("");
-  const [instances, setInstances] = useState([
-    { id: 1, name: "web-prod-01", service: "VPS Pro", status: "active", ip: "185.42.11.7" },
-    { id: 2, name: "db-staging-02", service: "Cloud Enterprise", status: "active", ip: "185.42.11.18" },
-    { id: 3, name: "landing-site-03", service: "Web Hosting Starter", status: "stopped", ip: "185.42.11.29" },
-  ]);
   const allTickets = useSelector((state) => state.tickets.tickets);
   const ticketRegistry = allTickets.filter((t) => t.userEmail === session.email);
   const [highlight, setHighlight] = useState(false);
+
+  // Expose toast to window so it can be called from other pages if necessary
+  window.showAppToast = showToast;
 
   function showToast(msg) {
     setToast(msg);
@@ -201,56 +192,18 @@ export default function CloudHostAI() {
     window.__chaiToastTimer = window.setTimeout(() => setToast(""), 2800);
   }
 
-  function goTo(page) {
-    if (PROTECTED_PAGES.includes(page) && !session.isLoggedIn) {
-      dispatch(setNotice("Bu sayfayı görüntülemek için giriş yapmalısınız."));
-      dispatch(setActiveTab("login"));
-      return;
-    }
-    dispatch(setNotice(""));
-    if (["login", "register", "dashboard"].includes(page)) {
-      dispatch(setActiveTab(page));
-    }
-    setActivePage(page);
-  }
-
   function selectService(id) {
     dispatch(setSelectedServiceId(id));
-    goTo("detail");
+    dispatch(setActiveTab("detail"));
   } 
 
-
-
-
-  function handlePurchase(service) {
+  function handlePurchase() {
     if (!session.isLoggedIn) {
       dispatch(setNotice("Satın almak için önce giriş yapmalısınız."));
       dispatch(setActiveTab("login"));
       return;
     }
-    const newInstance = {
-      id: Date.now(),
-      name: `${service.id}-${instances.length + 1}`,
-      service: service.name,
-      status: "active",
-      ip: `185.42.${Math.floor(Math.random() * 80) + 10}.${Math.floor(Math.random() * 200) + 10}`,
-    };
-    setInstances((prev) => [...prev, newInstance]);
-    showToast(`${service.name} hesabına eklendi (demo)`);
-    setActivePage("myservices");
-  }
-
-  function handleReboot(id) {
-    setInstances((prev) => prev.map((i) => (i.id === id ? { ...i, status: "rebooting" } : i)));
-    setTimeout(() => {
-      setInstances((prev) => prev.map((i) => (i.id === id ? { ...i, status: "active" } : i)));
-    }, 3000);
-  }
-
-  function handleToggleStop(id) {
-    setInstances((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, status: i.status === "stopped" ? "active" : "stopped" } : i))
-    );
+    dispatch(setActiveTab("purchase"));
   }
 
 
@@ -260,36 +213,34 @@ export default function CloudHostAI() {
   }
 
   let page;
-  if (activePage === "home") page = <HomePage goTo={goTo} selectService={selectService} />;
-  else if (activePage === "services") page = <ServicesPage goTo={goTo} />;
+  if (auth.activeTab === "home") page = <HomePage selectService={selectService} />;
+  else if (auth.activeTab === "services") page = <ServicesPage />;
  
-  else if (activePage === "detail") page = <ServiceDetailPage goTo={goTo} onPurchase={handlePurchase} />;
-  else if (activePage === "login") page = <LoginPage />;
-  else if (activePage === "register") page = <RegisterPage />;
+  else if (auth.activeTab === "detail") page = <ServiceDetailPage onPurchase={handlePurchase} />;
+  else if (auth.activeTab === "purchase") page = <PurchasePage />;
+  else if (auth.activeTab === "login") page = <LoginPage />;
+  else if (auth.activeTab === "register") page = <RegisterPage />;
 
-  else if (activePage === "dashboard") page = <DashboardPage session={session} instances={instances} ticketRegistry={ticketRegistry} goTo={goTo} />;
-  else if (activePage === "myservices")
+  else if (auth.activeTab === "dashboard") page = <DashboardPage session={session} ticketRegistry={ticketRegistry} />;
+  else if (auth.activeTab === "myservices")
     page = (
       <MyServicesPage
-        instances={instances}
-        onReboot={handleReboot}
-        onToggleStop={handleToggleStop}
         highlightActions={{ value: highlight, trigger: triggerHighlight }}
       />
     );
-  else if (activePage === "tickets") page = <TicketsPage />;
-  else if (activePage === "chat") page = <ChatPage />;
-  else if (activePage === "faq") page = <FaqPage />;
-  else page = <HomePage goTo={goTo} selectService={selectService} />;
+  else if (auth.activeTab === "tickets") page = <TicketsPage />;
+  else if (auth.activeTab === "chat") page = <ChatPage />;
+  else if (auth.activeTab === "faq") page = <FaqPage />;
+  else page = <HomePage selectService={selectService} />;
 
   return (
     <div className="chai-root min-h-screen">
       <style>{GLOBAL_STYLE}</style>
-      <NavBar activePage={activePage} goTo={goTo} session={session} onLogout={() => dispatch(authLogout())} />
+      <NavBar session={session} onLogout={() => dispatch(authLogout())} />
       {page}
       <Footer />
       <Toast message={toast} />
-      {activePage !== "home" && <AiChatWidget />}
+      {auth.activeTab !== "home" && <AiChatWidget />}
     </div>
   );
 }

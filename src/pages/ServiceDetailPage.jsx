@@ -16,8 +16,9 @@ import PrimaryButton from "../components/ui/PrimaryButton";
 
 import { assessSuitability } from "../lib/aiEngine";
 import { fetchServicesData } from "../store/servicesSlice";
+import { setActiveTab } from "../store/authSlice";
 
-export default function ServiceDetailPage({ goTo, onPurchase }) {
+export default function ServiceDetailPage({ onPurchase }) {
   const dispatch = useDispatch();
 
   const services = useSelector((state) => state.services.list);
@@ -50,7 +51,7 @@ export default function ServiceDetailPage({ goTo, onPurchase }) {
     <div className="px-6 py-12">
       <div className="mx-auto max-w-6xl">
         <button
-          onClick={() => goTo("services")}
+          onClick={() => dispatch(setActiveTab("services"))}
           className="text-sm text-muted hover:text-ink inline-flex items-center gap-1 mb-4"
         >
           <ChevronRight size={14} className="rotate-180" />
@@ -120,24 +121,6 @@ export default function ServiceDetailPage({ goTo, onPurchase }) {
               </div>
             </div>
 
-            <AssistantWidget
-              title="Kullanım Senaryosu Uygunluk Analizi"
-              intro={`${service.name} paketinin projeniz için yeterli olup olmadığını sorabilirsiniz.`}
-              quickQuestions={[
-                "Bu paket küçük bir e-ticaret sitesi için yeterli mi?",
-                "WordPress sitesi için yeterli mi?",
-                "Yüksek trafikli bir uygulama için yeterli mi?",
-              ]}
-              respond={(q) => {
-                const a = assessSuitability(service, q);
-
-                return {
-                  type: "suitability",
-                  text: a.text,
-                  service: a.ok ? null : a.upgrade,
-                };
-              }}
-            />
           </div>
 
           <div className="rounded-2xl border border-brand bg-card p-6 h-fit sticky top-6">

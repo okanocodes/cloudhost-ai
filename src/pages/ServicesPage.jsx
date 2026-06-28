@@ -10,8 +10,9 @@ import {
   setSelectedCategory,
   setSelectedServiceId,
 } from "../store/servicesSlice";
+import { setActiveTab } from "../store/authSlice";
 
-export default function ServicesPage({ goTo }) {
+export default function ServicesPage() {
   const dispatch = useDispatch();
 
   const services = useSelector((state) => state.services.list);
@@ -79,7 +80,7 @@ export default function ServicesPage({ goTo }) {
               service={service}
               onSelect={(id) => {
                 dispatch(setSelectedServiceId(id));
-                if (goTo) goTo("detail");
+                dispatch(setActiveTab("detail"));
               }}
             />
           ))}

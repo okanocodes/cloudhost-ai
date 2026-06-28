@@ -9,8 +9,9 @@ import FaqItem from "../components/ui/FaqItem";
 import { HelpCircle, Server, Sparkles } from "lucide-react";
 import { useSelector, useDispatch } from 'react-redux';
 import { decrement, increment } from "../store/counterSlice";
+import { setActiveTab } from "../store/authSlice";
 
-export default function HomePage({ goTo, selectService }) {
+export default function HomePage({ selectService }) {
     const [openFaq, setOpenFaq] = useState(["faq-reboot"]);
     const count = useSelector((state) => state.counter.value);
     const dispatch = useDispatch();
@@ -29,10 +30,10 @@ export default function HomePage({ goTo, selectService }) {
                             asistanı doğru paketi seçmenizden sunucu sorunlarını çözmenize kadar her adımda yanınızda.
                         </p>
                         <div className="mt-6 flex flex-wrap gap-3">
-                            <PrimaryButton onClick={() => goTo("services")}>
+                            <PrimaryButton onClick={() => dispatch(setActiveTab("services"))}>
                                 Paketleri Gör
                             </PrimaryButton>
-                            <GhostButton onClick={() => goTo("register")}>Ücretsiz Hesap Oluştur</GhostButton>
+                            <GhostButton onClick={() => dispatch(setActiveTab("register"))}>Ücretsiz Hesap Oluştur</GhostButton>
                         </div>
                         <div className="mt-8 flex flex-wrap gap-4 text-xs font-display text-muted">
                             <span className="inline-flex items-center gap-1.5">{COMPANY.support}</span>
