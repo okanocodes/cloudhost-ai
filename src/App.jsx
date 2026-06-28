@@ -117,7 +117,7 @@ export default function CloudHostAI() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-        <Route path="/myservices" element={<ProtectedRoute><MyServicesPage /></ProtectedRoute>} />
+        <Route path="/my-services" element={<ProtectedRoute><MyServicesPage /></ProtectedRoute>} />
         <Route path="/tickets" element={<ProtectedRoute><TicketsPage /></ProtectedRoute>} />
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/about" element={<AboutUsPage />} />

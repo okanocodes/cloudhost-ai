@@ -29,7 +29,7 @@ export default function DashboardPage() {
     const openTickets = ticketRegistry.filter((t) => t.status === "open").length;
 
     const shortcuts = [
-        { id: "myservices", title: "Servislerim", desc: "Sunucularını başlat, durdur veya yeniden başlat.", icon: Server },
+        { id: "my-services", title: "Servislerim", desc: "Sunucularını başlat, durdur veya yeniden başlat.", icon: Server },
         { id: "tickets", title: "Destek Merkezi", desc: "Yeni destek talebi oluştur veya mevcutları gör.", icon: Ticket },
         { id: "faq", title: "Bilgi Bankası", desc: "Sıkça sorulan soruları incele.", icon: HelpCircle },
     ];
