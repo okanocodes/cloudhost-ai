@@ -1,7 +1,3 @@
-export const config = {
-  runtime: "edge",
-};
-
 const SYSTEM_PROMPT = `Sen CloudHost AI adlı bulut altyapı barındırma platformuna gömülü yapay zekâ destek asistanısın. Yalnızca aşağıdaki bilgileri kullanarak yanıt ver — asla teknik özellik, fiyat veya politika icat etme.
 
 ŞİRKET
@@ -58,26 +54,17 @@ cloud-enterprise
 
 Tam katalog adını kullan. Bu etiket formatından kullanıcıya asla bahsetme — otomatik olarak bir ürün kartına dönüştürülür.`;
 
-export default async function handler(req) {
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { "Content-Type": "application/json" },
-    });
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const body = await req.json().catch(() => ({}));
-    const messages = body.messages || [];
+    const { messages } = req.body || {};
+    const messageList = messages || [];
 
-    if (!Array.isArray(messages)) {
-      return new Response(
-        JSON.stringify({ error: "messages must be an array" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+    if (!Array.isArray(messageList)) {
+      return res.status(400).json({ error: 'messages must be an array' });
     }
 
     // Try reading both Vercel custom variable (HF_TOKEN) and Vite standard variable (VITE_HF_TOKEN)
@@ -89,58 +76,47 @@ export default async function handler(req) {
     }
 
     if (!token) {
-      return new Response(
-        JSON.stringify({ error: "HF_TOKEN or VITE_HF_TOKEN is not configured on the server environment variables" }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      return res.status(500).json({ error: 'HF_TOKEN or VITE_HF_TOKEN is not configured on the server environment variables' });
     }
 
     // Strip custom frontend attributes (like metadata, error, streaming) from messages before forwarding to HuggingFace
-    const cleanMessages = messages.map((m) => ({
+    const cleanMessages = messageList.map((m) => ({
       role: m.role || "user",
       content: m.content || "",
     }));
 
-    const response = await fetch(
-      "https://api-inference.huggingface.co/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "Qwen/Qwen2.5-7B-Instruct",
-          messages: [{ role: "system", content: SYSTEM_PROMPT }, ...cleanMessages],
-          max_tokens: 400,
-          temperature: 0.4,
-          stream: true,
-        }),
-      }
-    );
+    const response = await fetch("https://api-inference.huggingface.co/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "Qwen/Qwen2.5-7B-Instruct",
+        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...cleanMessages],
+        max_tokens: 400,
+        temperature: 0.4,
+        stream: true,
+      }),
+    });
 
     if (!response.ok) {
       const errText = await response.text();
-      return new Response(JSON.stringify({ error: errText }), {
-        status: response.status,
-        headers: { "Content-Type": "application/json" },
-      });
+      return res.status(response.status).json({ error: errText });
     }
 
-    return new Response(response.body, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    });
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    const reader = response.body.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      res.write(value);
+    }
+    res.end();
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return res.status(500).json({ error: error.message });
   }
 }
