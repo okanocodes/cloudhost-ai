@@ -8,13 +8,11 @@ import GhostButton from "../components/ui/GhostButton";
 import FaqItem from "../components/ui/FaqItem";
 import { HelpCircle, Server, Sparkles } from "lucide-react";
 import { useSelector, useDispatch } from 'react-redux';
-import { decrement, increment } from "../store/counterSlice";
 import { setSelectedServiceId } from "../store/servicesSlice";
 import { useNavigate } from "react-router-dom";
 
 export default function HomePage() {
     const [openFaq, setOpenFaq] = useState(["faq-reboot"]);
-    const count = useSelector((state) => state.counter.value);
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -47,16 +45,9 @@ export default function HomePage() {
                             <span className="inline-flex items-center gap-1.5">4 Veri Merkezi</span>
                             <span className="inline-flex items-center gap-1.5">{COMPANY.refundDays} Gün İade</span>
                         </div>
-                        <div >
-                            <h1>Count: {count} (redux kullanımı için örnektir. sonra sil.)</h1>
-                            <div className="flex gap-5">
-                                <PrimaryButton onClick={() => dispatch(increment())}>+</PrimaryButton>
-                                <PrimaryButton onClick={() => dispatch(decrement())}>-</PrimaryButton>
-                            </div>
-                        </div>
                     </div>
 
-                    <AssistantWidget 
+                    <AssistantWidget
                         title="Hangi Paketi Seçmeliyim?"
                         intro="Projenizi anlatın, size uygun altyapıyı önereyim. Örn: “Hangi paketi almalıyım?”"
                         quickQuestions={["Hangi paketi almalıyım?", "React uygulamam için hangisi uygun?", "En ucuz seçenek nedir?"]}
