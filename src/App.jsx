@@ -10,7 +10,6 @@ import {
 import { COMPANY, FAQ, SERVICES } from "./data/knowledgeBase";
 import { GLOBAL_STYLE } from './design-tokens'
 import Logo from "./components/ui/Logo";
-import ServiceFinderBar from "./components/ServiceFinderBar";
 import GhostButton from "./components/ui/GhostButton";
 import PrimaryButton from "./components/ui/PrimaryButton";
 import Toast from "./components/ui/Toast";
@@ -154,6 +153,7 @@ const PROTECTED_PAGES = ["dashboard", "myservices", "tickets"];
 
 export default function CloudHostAI() {
   const [activePage, setActivePage] = useState("home");
+
   const [selectedServiceId, setSelectedServiceId] = useState("vps-pro");
   const auth = useSelector((state) => state.auth);
   const dispatch = useDispatch();
@@ -215,9 +215,9 @@ export default function CloudHostAI() {
   }
 
   function selectService(id) {
-    setSelectedServiceId(id);
+    //setSelectedServiceId(id);
     goTo("detail");
-  }
+  } 
 
 
 
@@ -259,14 +259,16 @@ export default function CloudHostAI() {
     setTimeout(() => setHighlight(false), 2400);
   }
 
-  const selectedService = SERVICES.find((s) => s.id === selectedServiceId);
+  // const selectedService = SERVICES.find((s) => s.id === selectedServiceId);
 
   let page;
   if (activePage === "home") page = <HomePage goTo={goTo} selectService={selectService} />;
-  else if (activePage === "services") page = <ServicesPage selectService={selectService} />;
+  else if (activePage === "services") page = <ServicesPage />;
+ 
   else if (activePage === "detail") page = <ServiceDetailPage service={selectedService} goTo={goTo} onPurchase={handlePurchase} />;
   else if (activePage === "login") page = <LoginPage />;
   else if (activePage === "register") page = <RegisterPage />;
+
   else if (activePage === "dashboard") page = <DashboardPage session={session} instances={instances} ticketRegistry={ticketRegistry} goTo={goTo} />;
   else if (activePage === "myservices")
     page = (
