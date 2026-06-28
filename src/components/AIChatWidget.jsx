@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useAIChat } from "../hooks/useAIChat";
 import { findProduct } from "../lib/aiChatService";
 import { Link } from "react-router-dom";
-import { Bot, Send, Sparkles, X } from "lucide-react";
+import { Bot, Send, X } from "lucide-react";
 
 
 /* =============================================================================
