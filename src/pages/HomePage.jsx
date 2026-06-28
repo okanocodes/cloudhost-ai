@@ -10,11 +10,17 @@ import { HelpCircle, Server, Sparkles } from "lucide-react";
 import { useSelector, useDispatch } from 'react-redux';
 import { decrement, increment } from "../store/counterSlice";
 import { setActiveTab } from "../store/authSlice";
+import { setSelectedServiceId } from "../store/servicesSlice";
 
-export default function HomePage({ selectService }) {
+export default function HomePage() {
     const [openFaq, setOpenFaq] = useState(["faq-reboot"]);
     const count = useSelector((state) => state.counter.value);
     const dispatch = useDispatch();
+
+    const handleSelectService = (id) => {
+        dispatch(setSelectedServiceId(id));
+        dispatch(setActiveTab("detail"));
+    };
 
     return (
         <div>
@@ -63,7 +69,7 @@ export default function HomePage({ selectService }) {
                     <h2 className="mt-2 text-2xl font-semibold text-ink">Her ölçek için bir altyapı katmanı</h2>
                     <div className="mt-6 grid gap-5 md:grid-cols-3">
                         {["vps-pro", "cloud-enterprise", "web-starter"].map((id) => (
-                            <ServiceCard key={id} service={SERVICES.find((s) => s.id === id)} onSelect={selectService} />
+                            <ServiceCard key={id} service={SERVICES.find((s) => s.id === id)} onSelect={handleSelectService} />
                         ))}
                     </div>
                 </div>

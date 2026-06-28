@@ -16,11 +16,12 @@ import PrimaryButton from "../components/ui/PrimaryButton";
 
 import { assessSuitability } from "../lib/aiEngine";
 import { fetchServicesData } from "../store/servicesSlice";
-import { setActiveTab } from "../store/authSlice";
+import { setActiveTab, setNotice } from "../store/authSlice";
 
-export default function ServiceDetailPage({ onPurchase }) {
+export default function ServiceDetailPage() {
   const dispatch = useDispatch();
 
+  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
   const services = useSelector((state) => state.services.list);
   const company = useSelector((state) => state.services.company);
   const selectedServiceId = useSelector(
@@ -36,6 +37,15 @@ export default function ServiceDetailPage({ onPurchase }) {
   }, [status, dispatch]);
 
   const service = services.find((s) => s.id === selectedServiceId);
+
+  const handlePurchase = () => {
+    if (!isLoggedIn) {
+      dispatch(setNotice("Satın almak için önce giriş yapmalısınız."));
+      dispatch(setActiveTab("login"));
+      return;
+    }
+    dispatch(setActiveTab("purchase"));
+  };
 
   if (status === "loading") {
     return <p className="px-6 py-12 text-muted">Detay yükleniyor...</p>;
@@ -151,7 +161,7 @@ export default function ServiceDetailPage({ onPurchase }) {
             </ul>
 
             <PrimaryButton
-              onClick={() => onPurchase(service)}
+              onClick={handlePurchase}
               className="mt-6 w-full"
             >
               Satın Al (Demo)

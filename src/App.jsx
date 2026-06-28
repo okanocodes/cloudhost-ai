@@ -24,10 +24,10 @@ import TicketsPage from "./pages/TicketsPage";
 import ChatPage from "./pages/ChatPage";
 import FaqPage from "./pages/FaqPage";
 import PurchasePage from "./pages/PurchasePage";
+import AboutUsPage from "./pages/AboutUsPage";
 import AiChatWidget from "./components/AIChatWidget";
 import { logout as authLogout, setActiveTab, setNotice } from "./store/authSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { setSelectedServiceId } from "./store/servicesSlice";
 
 
 /* ======================================================================
@@ -76,6 +76,7 @@ function NavBar({ session, onLogout }) {
   const publicLinks = [
     { id: "home", label: "Ana Sayfa" },
     { id: "services", label: "Hizmetler" },
+    { id: "about", label: "Hakkımızda" },
     { id: "chat", label: "AI Destek" },
     { id: "faq", label: "SSS" },
   ];
@@ -179,9 +180,6 @@ export default function CloudHostAI() {
   }, [auth.isLoggedIn, auth.user]);
 
   const [toast, setToast] = useState("");
-  const allTickets = useSelector((state) => state.tickets.tickets);
-  const ticketRegistry = allTickets.filter((t) => t.userEmail === session.email);
-  const [highlight, setHighlight] = useState(false);
 
   // Expose toast to window so it can be called from other pages if necessary
   window.showAppToast = showToast;
@@ -192,46 +190,22 @@ export default function CloudHostAI() {
     window.__chaiToastTimer = window.setTimeout(() => setToast(""), 2800);
   }
 
-  function selectService(id) {
-    dispatch(setSelectedServiceId(id));
-    dispatch(setActiveTab("detail"));
-  } 
-
-  function handlePurchase() {
-    if (!session.isLoggedIn) {
-      dispatch(setNotice("Satın almak için önce giriş yapmalısınız."));
-      dispatch(setActiveTab("login"));
-      return;
-    }
-    dispatch(setActiveTab("purchase"));
-  }
-
-
-  function triggerHighlight() {
-    setHighlight(true);
-    setTimeout(() => setHighlight(false), 2400);
-  }
-
   let page;
-  if (auth.activeTab === "home") page = <HomePage selectService={selectService} />;
+  if (auth.activeTab === "home") page = <HomePage />;
   else if (auth.activeTab === "services") page = <ServicesPage />;
  
-  else if (auth.activeTab === "detail") page = <ServiceDetailPage onPurchase={handlePurchase} />;
+  else if (auth.activeTab === "detail") page = <ServiceDetailPage />;
   else if (auth.activeTab === "purchase") page = <PurchasePage />;
   else if (auth.activeTab === "login") page = <LoginPage />;
   else if (auth.activeTab === "register") page = <RegisterPage />;
 
-  else if (auth.activeTab === "dashboard") page = <DashboardPage session={session} ticketRegistry={ticketRegistry} />;
-  else if (auth.activeTab === "myservices")
-    page = (
-      <MyServicesPage
-        highlightActions={{ value: highlight, trigger: triggerHighlight }}
-      />
-    );
+  else if (auth.activeTab === "dashboard") page = <DashboardPage />;
+  else if (auth.activeTab === "myservices") page = <MyServicesPage />;
   else if (auth.activeTab === "tickets") page = <TicketsPage />;
   else if (auth.activeTab === "chat") page = <ChatPage />;
   else if (auth.activeTab === "faq") page = <FaqPage />;
-  else page = <HomePage selectService={selectService} />;
+  else if (auth.activeTab === "about") page = <AboutUsPage />;
+  else page = <HomePage />;
 
   return (
     <div className="chai-root min-h-screen">

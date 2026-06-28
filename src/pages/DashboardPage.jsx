@@ -1,13 +1,16 @@
 import React from "react";
 import MetricCard from "../components/MetricCard";
-import { Server, DollarSign, Ticket, Bot, HelpCircle } from "lucide-react";
+import { Server, DollarSign, Ticket, HelpCircle } from "lucide-react";
 import { SERVICES } from "../data/knowledgeBase";
 import { useDispatch, useSelector } from "react-redux";
 import { setActiveTab } from "../store/authSlice";
 
-export default function DashboardPage({ session, ticketRegistry }) {
+export default function DashboardPage() {
     const dispatch = useDispatch();
-    const userEmail = useSelector((state) => state.auth.user?.email);
+    const auth = useSelector((state) => state.auth);
+    const displayName = auth.user ? (auth.user.name || auth.user.email.split("@")[0]) : "";
+    const userEmail = auth.user ? auth.user.email : "";
+
     const instances = useSelector((state) => state.myServices.instances);
     const userInstances = instances.filter((i) => i.userEmail === userEmail);
 
@@ -16,19 +19,21 @@ export default function DashboardPage({ session, ticketRegistry }) {
         const svc = SERVICES.find((s) => s.name === i.service);
         return sum + (svc ? svc.price : 0);
     }, 0);
+
+    const allTickets = useSelector((state) => state.tickets.tickets);
+    const ticketRegistry = allTickets.filter((t) => t.userEmail === userEmail);
     const openTickets = ticketRegistry.filter((t) => t.status === "open").length;
 
     const shortcuts = [
         { id: "myservices", title: "Servislerim", desc: "Sunucularını başlat, durdur veya yeniden başlat.", icon: Server },
         { id: "tickets", title: "Destek Merkezi", desc: "Yeni destek talebi oluştur veya mevcutları gör.", icon: Ticket },
-        { id: "chat", title: "AI Destek", desc: "Canlı yapay zekâ asistanıyla konuş.", icon: Bot },
         { id: "faq", title: "Bilgi Bankası", desc: "Sıkça sorulan soruları incele.", icon: HelpCircle },
     ];
 
     return (
         <div className="px-6 py-12">
             <div className="mx-auto max-w-6xl">
-                <h1 className="text-2xl font-semibold text-ink">Tekrar hoş geldin, {session.name} 👋</h1>
+                <h1 className="text-2xl font-semibold text-ink">Tekrar hoş geldin, {displayName} 👋</h1>
                 <p className="text-muted mt-1">Altyapı durumunun genel görünümü.</p>
 
                 <div className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -38,7 +43,7 @@ export default function DashboardPage({ session, ticketRegistry }) {
                 </div>
 
                 <h2 className="mt-10 text-sm font-display uppercase tracking-wider text-muted">Hızlı Erişim</h2>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="mt-4 grid gap-4 sm:grid-cols-3">
                     {shortcuts.map((s) => (
                         <button
                             key={s.id}
