@@ -36,9 +36,16 @@ export function useAIChat(initialMessages = []) {
       if (!response.ok) {
         let errText = `HTTP error! status: ${response.status}`;
         try {
-          const errJson = await response.json();
-          if (errJson && errJson.error) {
-            errText = typeof errJson.error === 'object' ? JSON.stringify(errJson.error) : errJson.error;
+          const rawText = await response.text();
+          try {
+            const errJson = JSON.parse(rawText);
+            if (errJson && errJson.error) {
+              errText = typeof errJson.error === 'object' ? JSON.stringify(errJson.error) : errJson.error;
+            } else {
+              errText = rawText;
+            }
+          } catch {
+            errText = rawText || errText;
           }
         } catch {
           // ignore
