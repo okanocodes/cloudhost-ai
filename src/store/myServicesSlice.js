@@ -11,10 +11,13 @@ const initialState = {
 
 export const rebootInstance = createAsyncThunk(
   "myServices/rebootInstance",
-  async (id, { dispatch }) => {
-    dispatch(setInstanceStatus({ id, status: "rebooting" }));
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    dispatch(setInstanceStatus({ id, status: "active" }));
+  async (id, { rejectWithValue }) => {
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
   }
 );
 
@@ -39,6 +42,30 @@ const myServicesSlice = createSlice({
         inst.status = inst.status === "stopped" ? "active" : "stopped";
       }
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(rebootInstance.pending, (state, action) => {
+        const id = action.meta.arg;
+        const inst = state.instances.find((i) => i.id === id);
+        if (inst) {
+          inst.status = "rebooting";
+        }
+      })
+      .addCase(rebootInstance.fulfilled, (state, action) => {
+        const id = action.payload;
+        const inst = state.instances.find((i) => i.id === id);
+        if (inst) {
+          inst.status = "active";
+        }
+      })
+      .addCase(rebootInstance.rejected, (state, action) => {
+        const id = action.meta.arg;
+        const inst = state.instances.find((i) => i.id === id);
+        if (inst) {
+          inst.status = "active";
+        }
+      });
   },
 });
 
