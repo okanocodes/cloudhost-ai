@@ -4,9 +4,9 @@ import { parseAssistantResponse } from "../lib/aiChatService";
 // Mesaj geçmişi durumunu (messages), girdi kutusunu (input) ve bekleme durumunu (busy) yöneten React kancası (hook).
 export function useAIChat(initialMessages = []) {
   const [messages, setMessages] = useState(initialMessages); // Sohbet pencerisindeki mesaj geçmişi
-  const [input, setInput] = useState("");                     // Kullanıcının yazdığı anlık girdi metni
-  const [busy, setBusy] = useState(false);                   // Sunucudan yanıt beklenip beklenmediği durumu
-  const cancelledRef = useRef(false);                         // Bileşenin (component) kaldırılması durumunda akışı iptal etmek için referans
+  const [input, setInput] = useState(""); // Kullanıcının yazdığı anlık girdi metni
+  const [busy, setBusy] = useState(false); // Sunucudan yanıt beklenip beklenmediği durumu
+  const cancelledRef = useRef(false); // Bileşenin (component) kaldırılması durumunda akışı iptal etmek için referans
 
   // Bileşen sonlandığında (unmount) asenkron akışı durdurmak için temizlik yapar.
   useEffect(() => {
@@ -46,7 +46,10 @@ export function useAIChat(initialMessages = []) {
           try {
             const errJson = JSON.parse(rawText);
             if (errJson && errJson.error) {
-              errText = typeof errJson.error === 'object' ? JSON.stringify(errJson.error) : errJson.error;
+              errText =
+                typeof errJson.error === "object"
+                  ? JSON.stringify(errJson.error)
+                  : errJson.error;
             } else {
               errText = rawText;
             }
@@ -62,7 +65,7 @@ export function useAIChat(initialMessages = []) {
       // Sunucudan gelen veri akışını (stream) okumak için okuyucu başlatır.
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let acc = "";         // Gelen tüm kelimelerin biriktiği değişken
+      let acc = ""; // Gelen tüm kelimelerin biriktiği değişken
       let partialLine = ""; // Tamamlanmamış veri satırlarını birleştirmek için tampon
 
       // SSE (Server-Sent Events) veri akışını satır satır okuyan döngü.
@@ -129,7 +132,7 @@ export function useAIChat(initialMessages = []) {
         const next = [...prev];
         next[next.length - 1] = {
           role: "assistant",
-          content: `Üzgünüm, yapay zekâ servisine erişirken bir sorun oluştu:\n${err.message}`,
+          content: `Üzgünüm, yapay zekâ servisine erişirken bir sorun oluştu`,
           error: true,
         };
         return next;
