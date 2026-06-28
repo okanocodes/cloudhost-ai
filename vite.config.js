@@ -92,15 +92,21 @@ Tam katalog adını kullan. Bu etiket formatından kullanıcıya asla bahsetme �
               req.on("end", async () => {
                 try {
                   const { messages } = JSON.parse(body);
-                  const token = env.VITE_HF_TOKEN;
+                  const token = env.VITE_HF_TOKEN || env.HF_TOKEN;
 
                   // Çevre değişkenlerinde Hugging Face API anahtarı yoksa hata döndürüyoruz.
                   if (!token) {
                     res.statusCode = 500;
                     res.setHeader("Content-Type", "application/json");
-                    res.end(JSON.stringify({ error: "VITE_HF_TOKEN is not configured in .env file" }));
+                    res.end(JSON.stringify({ error: "VITE_HF_TOKEN or HF_TOKEN is not configured in .env file" }));
                     return;
                   }
+
+                  // Custom metadata ve streaming niteliklerini HuggingFace API şemasına uymadığı için temizliyoruz.
+                  const cleanMessages = messages.map((m) => ({
+                    role: m.role,
+                    content: m.content,
+                  }));
 
                   // Hugging Face Sunucusuna güvenli arka uç (backend) bağlantısı kurarak API anahtarını gizliyoruz.
                   const response = await fetch("https://api-inference.huggingface.co/v1/chat/completions", {
@@ -111,7 +117,7 @@ Tam katalog adını kullan. Bu etiket formatından kullanıcıya asla bahsetme �
                     },
                     body: JSON.stringify({
                       model: "Qwen/Qwen2.5-7.2B-Instruct",
-                      messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+                      messages: [{ role: "system", content: SYSTEM_PROMPT }, ...cleanMessages],
                       max_tokens: 400,
                       temperature: 0.4,
                       stream: true, // Cevabı kelime kelime akıtarak (stream) iletmek için aktif ediyoruz.

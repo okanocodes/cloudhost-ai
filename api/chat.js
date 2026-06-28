@@ -67,18 +67,42 @@ export default async function handler(req) {
   }
 
   try {
-    const { messages } = await req.json();
-    const token = process.env.VITE_HF_TOKEN;
+    const body = await req.json().catch(() => ({}));
+    const messages = body.messages || [];
+
+    if (!Array.isArray(messages)) {
+      return new Response(
+        JSON.stringify({ error: "messages must be an array" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Try reading both Vercel custom variable (HF_TOKEN) and Vite standard variable (VITE_HF_TOKEN)
+    let token = process.env.HF_TOKEN || process.env.VITE_HF_TOKEN;
+
+    // Check if the user accidentally copied "VITE_HF_TOKEN=" prefix into the dashboard
+    if (token && token.startsWith("VITE_HF_TOKEN=")) {
+      token = token.slice("VITE_HF_TOKEN=".length).trim();
+    }
 
     if (!token) {
       return new Response(
-        JSON.stringify({ error: "HF_TOKEN is not configured on the server" }),
+        JSON.stringify({ error: "HF_TOKEN or VITE_HF_TOKEN is not configured on the server environment variables" }),
         {
           status: 500,
           headers: { "Content-Type": "application/json" },
-        },
+        }
       );
     }
+
+    // Strip custom frontend attributes (like metadata, error, streaming) from messages before forwarding to HuggingFace
+    const cleanMessages = messages.map((m) => ({
+      role: m.role || "user",
+      content: m.content || "",
+    }));
 
     const response = await fetch(
       "https://api-inference.huggingface.co/v1/chat/completions",
@@ -90,7 +114,7 @@ export default async function handler(req) {
         },
         body: JSON.stringify({
           model: "Qwen/Qwen2.5-7.2B-Instruct",
-          messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+          messages: [{ role: "system", content: SYSTEM_PROMPT }, ...cleanMessages],
           max_tokens: 400,
           temperature: 0.4,
           stream: true,
