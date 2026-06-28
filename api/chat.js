@@ -1,6 +1,8 @@
-import { SERVICES } from "../data/knowledgeBase";
+export const config = {
+  runtime: "edge",
+};
 
-export const SYSTEM_PROMPT = `Sen CloudHost AI adlı bulut altyapı barındırma platformuna gömülü yapay zekâ destek asistanısın. Yalnızca aşağıdaki bilgileri kullanarak yanıt ver — asla teknik özellik, fiyat veya politika icat etme.
+const SYSTEM_PROMPT = `Sen CloudHost AI adlı bulut altyapı barındırma platformuna gömülü yapay zekâ destek asistanısın. Yalnızca aşağıdaki bilgileri kullanarak yanıt ver — asla teknik özellik, fiyat veya politika icat etme.
 
 ŞİRKET
 - Ad: CloudHost AI
@@ -56,62 +58,65 @@ cloud-enterprise
 
 Tam katalog adını kullan. Bu etiket formatından kullanıcıya asla bahsetme — otomatik olarak bir ürün kartına dönüştürülür.`;
 
-export const PRODUCTS = [
-    { id: "web-starter", title: "Web Hosting Starter", price: "$2/ay", specs: "1 Çekirdek (Paylaşımlı) · 1GB RAM · 20GB SSD" },
-    { id: "vps-basic", title: "VPS Basic", price: "$5/ay", specs: "2 Çekirdek · 4GB RAM · 80GB SSD" },
-    { id: "vps-pro", title: "VPS Pro", price: "$10/ay", specs: "4 Çekirdek · 8GB RAM · 160GB SSD" },
-    { id: "cloud-enterprise", title: "Cloud Enterprise", price: "$25/ay", specs: "8 Çekirdek · 16GB RAM · 320GB NVMe" },
-];
+export default async function handler(req) {
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
-export function findProduct(id) {
-    if (!id) return null;
-    const cleanId = id.trim().toLowerCase();
-    
-    // Check local PRODUCTS array first
-    const product = PRODUCTS.find(p => p.id.toLowerCase() === cleanId);
-    if (product) return product;
+  try {
+    const { messages } = await req.json();
+    const token = process.env.VITE_HF_TOKEN;
 
-    // Fallback to SERVICES array from knowledgeBase
-    const service = SERVICES.find(s => s.id.toLowerCase() === cleanId);
-    if (service) {
-        return {
-            id: service.id,
-            title: service.name,
-            price: `$${service.price}/ay`,
-            specs: `${service.cpuLabel || `${service.cpu} Çekirdek`} · ${service.ram}GB RAM · ${service.storage}GB ${service.storageType}`
-        };
+    if (!token) {
+      return new Response(
+        JSON.stringify({ error: "HF_TOKEN is not configured on the server" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
     }
 
-    return null;
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/meta-llama/Llama-3.1-8B-Instruct/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "meta-llama/Llama-3.1-8B-Instruct",
+          messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+          max_tokens: 400,
+          temperature: 0.4,
+          stream: true,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      const errText = await response.text();
+      return new Response(JSON.stringify({ error: errText }), {
+        status: response.status,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(response.body, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 }
-
-export function parseAssistantResponse(response) {
-    const separator = "\n---\n";
-    const index = response.lastIndexOf(separator);
-
-    if (index === -1) {
-        return {
-            message: response.trim(),
-            metadata: {},
-        };
-    }
-
-    const message = response.slice(0, index).trim();
-    const json = response.slice(index + separator.length).trim();
-
-    try {
-        const metadata = JSON.parse(json);
-        return {
-            message,
-            metadata,
-        };
-    } catch (err) {
-        console.warn("Failed to parse AI metadata:", err);
-        return {
-            message,
-            metadata: {},
-        };
-    }
-}
-
-// Local inference client removed since streaming moves to server-side endpoint `/api/chat`.

@@ -1,9 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import {
-  getInferenceClient,
-  SYSTEM_PROMPT,
-  parseAssistantResponse,
-} from "../lib/aiChatService";
+import { parseAssistantResponse } from "../lib/aiChatService";
 
 export function useAIChat(initialMessages = []) {
   const [messages, setMessages] = useState(initialMessages);
@@ -27,36 +23,73 @@ export function useAIChat(initialMessages = []) {
     ]);
 
     try {
-      const client = getInferenceClient();
-      const stream = client.chatCompletionStream({
-        model: "meta-llama/Llama-3.1-8B-Instruct",
-        provider: "auto",
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...history],
-        max_tokens: 400,
-        temperature: 0.4,
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: history,
+        }),
       });
 
-      let acc = "";
-      for await (const chunk of stream) {
-        if (cancelledRef.current) return;
-        const delta = chunk.choices?.[0]?.delta?.content;
-        if (delta) {
-          acc += delta;
-          const separator = "\n---\n";
-          // Hide the metadata while streaming
-          const visibleText = acc.includes(separator)
-            ? acc.split(separator)[0]
-            : acc;
+      if (!response.ok) {
+        let errText = `HTTP error! status: ${response.status}`;
+        try {
+          const errJson = await response.json();
+          if (errJson && errJson.error) {
+            errText = typeof errJson.error === 'object' ? JSON.stringify(errJson.error) : errJson.error;
+          }
+        } catch {
+          // ignore
+        }
+        throw new Error(errText);
+      }
 
-          setMessages((prev) => {
-            const next = [...prev];
-            next[next.length - 1] = {
-              role: "assistant",
-              content: visibleText,
-              streaming: true,
-            };
-            return next;
-          });
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let acc = "";
+      let partialLine = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (cancelledRef.current) return;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = (partialLine + chunk).split("\n");
+        partialLine = lines.pop() || "";
+
+        for (const line of lines) {
+          const cleanLine = line.trim();
+          if (cleanLine.startsWith("data: ")) {
+            const dataStr = cleanLine.slice(6);
+            if (dataStr === "[DONE]") continue;
+            try {
+              const data = JSON.parse(dataStr);
+              const delta = data.choices?.[0]?.delta?.content;
+              if (delta) {
+                acc += delta;
+                const separator = "\n---\n";
+                // Hide the metadata while streaming
+                const visibleText = acc.includes(separator)
+                  ? acc.split(separator)[0]
+                  : acc;
+
+                setMessages((prev) => {
+                  const next = [...prev];
+                  next[next.length - 1] = {
+                    role: "assistant",
+                    content: visibleText,
+                    streaming: true,
+                  };
+                  return next;
+                });
+              }
+            } catch {
+              // Ignore invalid JSON parsing (e.g. keep-alive comments or partial payloads)
+            }
+          }
         }
       }
 
@@ -76,13 +109,12 @@ export function useAIChat(initialMessages = []) {
         const next = [...prev];
         next[next.length - 1] = {
           role: "assistant",
-          content:
-            "Üzgünüm, şu anda yapay zekâ servisine erişemedim. Lütfen birazdan tekrar deneyin.",
+          content: `Üzgünüm, yapay zekâ servisine erişirken bir sorun oluştu:\n${err.message}`,
           error: true,
         };
         return next;
       });
-      console.error("HF chat stream failed:", err);
+      console.error("Local API chat stream failed:", err);
     } finally {
       if (!cancelledRef.current) setBusy(false);
     }
