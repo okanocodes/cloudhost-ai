@@ -81,7 +81,7 @@ export default async function handler(req) {
     }
 
     const response = await fetch(
-      "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-7.2B-Instruct/v1/chat/completions",
+      "https://api-inference.huggingface.co/v1/chat/completions",
       {
         method: "POST",
         headers: {
