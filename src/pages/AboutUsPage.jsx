@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Sparkles, Shield, Cpu, MapPin, CheckCircle, Server } from "lucide-react";
 import { COMPANY } from "../data/knowledgeBase";
 import SectionEyebrow from "../components/ui/SectionEyebrow";
@@ -7,6 +7,10 @@ import { useNavigate } from "react-router-dom";
 
 export default function AboutUsPage() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = `Hakkımızda | ${COMPANY.name}`;
+  }, []);
   return (
     <div className="px-6 py-12 md:py-20">
       <div className="mx-auto max-w-4xl space-y-16">

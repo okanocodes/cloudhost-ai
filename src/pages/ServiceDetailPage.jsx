@@ -36,6 +36,14 @@ export default function ServiceDetailPage() {
 
   const service = services.find((s) => s.id === id);
 
+  useEffect(() => {
+    if (service) {
+      document.title = `${service.name} Detayları | CloudHost AI`;
+    } else {
+      document.title = "Hizmet Detayı | CloudHost AI";
+    }
+  }, [service]);
+
   const handlePurchase = () => {
     if (!isLoggedIn) {
       dispatch(setNotice("Satın almak için önce giriş yapmalısınız."));

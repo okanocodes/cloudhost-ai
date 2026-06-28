@@ -30,6 +30,10 @@ export default function ServicesPage() {
     }
   }, [status, dispatch]);
 
+  useEffect(() => {
+    document.title = "Hizmetler | CloudHost AI";
+  }, []);
+
   const filtered = services.filter(
     (service) =>
       selectedCategory === "Tümü" || service.category === selectedCategory

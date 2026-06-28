@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AuthShell from "../components/AuthShell";
 import PrimaryButton from "../components/ui/PrimaryButton";
 import { Mail, Lock, AlertTriangle, Eye, EyeOff } from "lucide-react";
@@ -13,6 +13,10 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const dispatch = useDispatch();
     const notice = useSelector((state) => state.auth.notice);
+
+    useEffect(() => {
+        document.title = "Giriş Yap | CloudHost AI";
+    }, []);
 
     if (isLoggedIn) {
         return <Navigate to="/dashboard" replace />;

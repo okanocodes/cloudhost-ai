@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { COMPANY, SERVICES, FAQ } from "../data/knowledgeBase";
 import SectionEyebrow from "../components/ui/SectionEyebrow";
 import ServiceCard from "../components/ServiceCard";
@@ -7,7 +7,7 @@ import PrimaryButton from "../components/ui/PrimaryButton";
 import GhostButton from "../components/ui/GhostButton";
 import FaqItem from "../components/ui/FaqItem";
 import { HelpCircle, Server, Sparkles } from "lucide-react";
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { setSelectedServiceId } from "../store/servicesSlice";
 import { useNavigate } from "react-router-dom";
 
@@ -15,6 +15,10 @@ export default function HomePage() {
     const [openFaq, setOpenFaq] = useState(["faq-reboot"]);
     const dispatch = useDispatch();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        document.title = "CloudHost AI - Yapay Zekâ Destekli Bulut Altyapı Yönetim Platformu";
+    }, []);
 
     const handleSelectService = (id) => {
         dispatch(setSelectedServiceId(id));

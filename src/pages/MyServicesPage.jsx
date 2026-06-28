@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import StatusPill from "../components/ui/StatusPill";
 import AssistantWidget from "../components/AssistantWidget";
 import { RotateCw, Power, LifeBuoy } from "lucide-react";
@@ -13,6 +13,10 @@ export default function MyServicesPage() {
     const userInstances = instances.filter((i) => i.userEmail === userEmail);
     const [helpOpen, setHelpOpen] = useState(false);
     const [highlight, setHighlight] = useState(false);
+
+    useEffect(() => {
+        document.title = "Servislerim | CloudHost AI";
+    }, []);
 
     function triggerHighlight() {
         setHighlight(true);

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { CreditCard, ShieldCheck, Lock, RotateCw, CheckCircle } from "lucide-react";
 import { SERVICES } from "../data/knowledgeBase";
@@ -19,6 +19,14 @@ export default function PurchasePage() {
   const service =
     services.find((s) => s.id === id) ||
     SERVICES.find((s) => s.id === id);
+
+  useEffect(() => {
+    if (service) {
+      document.title = `${service.name} Satın Al | CloudHost AI`;
+    } else {
+      document.title = "Satın Al | CloudHost AI";
+    }
+  }, [service]);
 
   // Filter instances of the logged-in user to determine the next instance name
   const userInstances = instances.filter((i) => i.userEmail === userEmail);

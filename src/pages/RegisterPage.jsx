@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AuthShell from "../components/AuthShell";
 import PrimaryButton from "../components/ui/PrimaryButton";
 import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
@@ -13,6 +13,10 @@ export default function RegisterPage() {
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const dispatch = useDispatch();
+
+    useEffect(() => {
+        document.title = "Kayıt Ol | CloudHost AI";
+    }, []);
 
     if (isLoggedIn) {
         return <Navigate to="/dashboard" replace />;

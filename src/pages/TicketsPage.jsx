@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import PrimaryButton from "../components/ui/PrimaryButton";
 import Badge from "../components/ui/Badge";
@@ -10,6 +10,10 @@ export default function TicketsPage() {
     const allTickets = useSelector((state) => state.tickets.tickets);
     const currentUser = useSelector((state) => state.auth.user);
     const userEmail = currentUser ? currentUser.email : "";
+
+    useEffect(() => {
+        document.title = "Destek Merkezi | CloudHost AI";
+    }, []);
 
     const ticketRegistry = allTickets.filter((t) => t.userEmail === userEmail);
 

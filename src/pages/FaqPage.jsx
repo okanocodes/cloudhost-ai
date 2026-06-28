@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { FAQ } from "../data/knowledgeBase";
 import FaqItem from "../components/ui/FaqItem";
@@ -7,6 +7,10 @@ import { normalize } from "../lib/aiEngine";
 export default function FaqPage() {
     const [search, setSearch] = useState("");
     const [open, setOpen] = useState([]);
+
+    useEffect(() => {
+        document.title = "Sıkça Sorulan Sorular | CloudHost AI";
+    }, []);
     const filtered = FAQ.filter((f) => normalize(f.q + " " + f.a).includes(normalize(search)));
     return (
         <div className="px-6 py-12">

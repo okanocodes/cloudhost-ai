@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import MetricCard from "../components/MetricCard";
 import { Server, DollarSign, Ticket, HelpCircle } from "lucide-react";
 import { SERVICES } from "../data/knowledgeBase";
@@ -8,6 +8,10 @@ import { useNavigate } from "react-router-dom";
 export default function DashboardPage() {
     const navigate = useNavigate();
     const auth = useSelector((state) => state.auth);
+
+    useEffect(() => {
+        document.title = "Panel | CloudHost AI";
+    }, []);
     const displayName = auth.user ? (auth.user.name || auth.user.email.split("@")[0]) : "";
     const userEmail = auth.user ? auth.user.email : "";
 
