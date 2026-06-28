@@ -321,7 +321,7 @@ export default function PurchasePage() {
                 <div className="flex gap-2 items-center bg-card-soft rounded-lg p-3 border border-token text-xs text-muted leading-relaxed">
                   <ShieldCheck className="text-success shrink-0" size={18} />
                   <span>
-                    Ödeme altyapımız PCI-DSS uyumludur. Kart bilgileriniz hiçbir şekilde sunucularımızda saklanmaz.
+                    Kart bilgileriniz hiçbir şekilde sunucularımızda saklanmaz.
                   </span>
                 </div>
 

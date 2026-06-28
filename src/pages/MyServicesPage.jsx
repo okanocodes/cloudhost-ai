@@ -74,34 +74,6 @@ export default function MyServicesPage() {
                         </tbody>
                     </table>
                 </div>
-
-                <div className="mt-6">
-                    <button
-                        onClick={() => setHelpOpen((v) => !v)}
-                        className="inline-flex items-center gap-2 text-sm text-ai hover:underline mb-3"
-                    >
-                        <LifeBuoy size={15} /> Canlı Sistem Yardım Terminali {helpOpen ? "▲" : "▼"}
-                    </button>
-                    {helpOpen && (
-                        <div className="max-w-lg chai-fade-up">
-                            <AssistantWidget
-                                title="Sistem Yardım Terminali"
-                                intro="Sunucu işlemleriyle ilgili bir komut yazın, örn: “Sunucumu nasıl yeniden başlatırım?”"
-                                quickQuestions={["Sunucumu nasıl yeniden başlatırım?", "Sunucumu nasıl durdurabilirim?"]}
-                                respond={(q) => {
-                                    const faq = matchFAQ(q);
-                                    if (faq) return { type: "faq", text: faq.a, faq };
-                                    return { type: "faq", text: "Bunun için Servislerim tablosundaki İşlemler sütunundaki düğmeleri kullanabilirsiniz.", faq: null };
-                                }}
-                                onResult={(result) => {
-                                    if (result.faq && (result.faq.id === "faq-reboot" || result.faq.id === "faq-stop")) {
-                                        triggerHighlight();
-                                    }
-                                }}
-                            />
-                        </div>
-                    )}
-                </div>
             </div>
         </div>
     );

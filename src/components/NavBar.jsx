@@ -59,7 +59,7 @@ export default function NavBar() {
           {session.isLoggedIn ? (
             <>
               <Link to="/dashboard"><GhostButton className="py-2"><LayoutDashboard size={14} /> Panel</GhostButton></Link>
-              <Link to="/myservices"><GhostButton className="py-2"><Server size={14} /> Servislerim</GhostButton></Link>
+              <Link to="/my-services"><GhostButton className="py-2"><Server size={14} /> Servislerim</GhostButton></Link>
               <Link to="/tickets"><GhostButton className="py-2"><Ticket size={14} /> Destek</GhostButton></Link>
               <button onClick={onLogout} className="ml-1 flex items-center gap-1.5 rounded-lg border border-token-light px-3 py-2 text-sm text-muted hover:text-danger">
                 <LogOut size={14} /> {session.name}
@@ -82,16 +82,16 @@ export default function NavBar() {
         <div className="md:hidden border-t border-token px-4 py-3 space-y-1">
           {[
             ...publicLinks,
-            ...(session.isLoggedIn 
+            ...(session.isLoggedIn
               ? [
-                  { id: "dashboard", path: "/dashboard", label: "Panel" },
-                  { id: "myservices", path: "/myservices", label: "Servislerim" },
-                  { id: "tickets", path: "/tickets", label: "Destek Merkezi" }
-                ] 
+                { id: "dashboard", path: "/dashboard", label: "Panel" },
+                { id: "myservices", path: "/myservices", label: "Servislerim" },
+                { id: "tickets", path: "/tickets", label: "Destek Merkezi" }
+              ]
               : [
-                  { id: "login", path: "/login", label: "Giriş Yap" },
-                  { id: "register", path: "/register", label: "Kayıt Ol" }
-                ])
+                { id: "login", path: "/login", label: "Giriş Yap" },
+                { id: "register", path: "/register", label: "Kayıt Ol" }
+              ])
           ].map((l) => (
             <Link
               key={l.id}
