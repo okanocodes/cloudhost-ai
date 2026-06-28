@@ -103,14 +103,14 @@ Tam katalog adını kullan. Bu etiket formatından kullanıcıya asla bahsetme �
                   }
 
                   // Hugging Face Sunucusuna güvenli arka uç (backend) bağlantısı kurarak API anahtarını gizliyoruz.
-                  const response = await fetch("https://api-inference.huggingface.co/models/meta-llama/Llama-3.1-8B-Instruct/v1/chat/completions", {
+                  const response = await fetch("https://api-inference.huggingface.co/models/Qwen/Qwen2.5-7.2B-Instruct/v1/chat/completions", {
                     method: "POST",
                     headers: {
                       "Authorization": `Bearer ${token}`,
                       "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                      model: "meta-llama/Llama-3.1-8B-Instruct",
+                      model: "Qwen/Qwen2.5-7.2B-Instruct",
                       messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
                       max_tokens: 400,
                       temperature: 0.4,
